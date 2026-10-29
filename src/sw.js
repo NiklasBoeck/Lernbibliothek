@@ -11,9 +11,12 @@ self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
   if (e.request.method !== 'GET' || url.origin !== location.origin) return;
   if (e.request.mode === 'navigate') {
-    e.respondWith(fetch(e.request, { cache: 'no-cache' }).then(r => { const c = r.clone(); caches.open(CACHE).then(x => x.put('index.html', c)); return r; })
-      .catch(() => caches.match('index.html')));
+    // Bei schlechtem oder keinem Netz nach 3 s die gespeicherte Version starten
+    const net = fetch(e.request, { cache: 'no-cache' }).then(r => { if (r.ok) { const c = r.clone(); caches.open(CACHE).then(x => x.put('index.html', c)); } return r; });
+    const cached = () => caches.match('index.html', { ignoreSearch: true });
+    const timeout = new Promise(res => setTimeout(res, 3000)).then(cached);
+    e.respondWith(Promise.race([net.catch(cached), timeout.then(r => r || net)]).then(r => r || net));
     return;
   }
-  e.respondWith(caches.match(e.request).then(hit => hit || fetch(e.request)));
+  e.respondWith(caches.match(e.request, { ignoreSearch: true }).then(hit => hit || fetch(e.request)));
 });

@@ -2655,6 +2655,7 @@ async function syncNow() {
       await uploadItem(m, uidv);
     }
     setSyncState('ok');
+    prefetchFiles(uidv);
   } catch (e) {
     console.error(e);
     setSyncState(navigator.onLine === false ? 'offline' : 'error');
@@ -2664,18 +2665,34 @@ async function syncNow() {
     if (Sync.again) { Sync.again = false; syncSoon(400); }
   }
 }
+// Damit die App offline geht: alle Skripte aus der Cloud im Hintergrund aufs Gerät laden
+let prefetching = false;
+async function prefetchFiles(uidv) {
+  if (prefetching) return;
+  prefetching = true;
+  try {
+    for (const m of [...items]) {
+      if (m.sample || !Sync.user || Sync.user.id !== uidv || navigator.onLine === false) break;
+      if (await DB.get('files', m.id)) continue;
+      try { await downloadFile(m, uidv); } catch (e) { console.warn('Vorladen fehlgeschlagen', m.id, e); }
+    }
+  } finally { prefetching = false; }
+}
+async function downloadFile(m, uidv) {
+  const { data, error } = await SB.storage.from(BUCKET).download(`${uidv}/${m.id}.pdf`);
+  if (error || !data) throw error || new Error('download');
+  const f = { id: m.id, blob: data };
+  await DB.put('files', f);
+  m.hasFile = true; await DB.put('meta', m);
+  return f;
+}
 async function ensureFile(m) {
   let f = await DB.get('files', m.id);
   if (f) return f;
   if (!SB || !Sync.user) throw new Error('Datei fehlt');
   if (navigator.onLine === false) throw new Error('offline');
   $('#loading').textContent = 'Skript wird aus der Cloud geladen…';
-  const { data, error } = await SB.storage.from(BUCKET).download(`${Sync.user.id}/${m.id}.pdf`);
-  if (error || !data) throw error || new Error('download');
-  f = { id: m.id, blob: data };
-  await DB.put('files', f);
-  m.hasFile = true; await DB.put('meta', m);
-  return f;
+  return downloadFile(m, Sync.user.id);
 }
 
 function renderAcct() {
@@ -2747,6 +2764,8 @@ if (SB) {
     if (u && changed) syncSoon(200);
   });
   window.addEventListener('online', () => syncSoon(300));
+  // Gerät soll die Skripte nicht von selbst wegräumen (wichtig für offline)
+  try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {}); } catch {}
   window.addEventListener('offline', () => { if (Sync.user) setSyncState('offline'); });
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible') syncSoon(300);
