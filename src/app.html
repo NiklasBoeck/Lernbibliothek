@@ -227,6 +227,10 @@ select.sort { border: 1px solid var(--line); background: var(--surface); border-
 .ai-body { flex: 1; overflow: auto; padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; }
 .ai-ctx { background: var(--paper); border-left: 3px solid var(--marker); border-radius: 8px; padding: 8px 10px; font-size: 13px; color: var(--muted); display: flex; gap: 6px; align-items: flex-start; }
 .ai-ctx span { flex: 1; min-width: 0; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+.ai-ctx img { width: 54px; height: 54px; object-fit: contain; border-radius: 6px; background: #fff; flex: none; }
+::highlight(aimark) { background-color: rgba(31, 95, 122, .35); }
+.imgmark { position: absolute; z-index: 4; border: 2px solid var(--accent); background: rgba(31, 95, 122, .14); border-radius: 4px; pointer-events: none; }
+.flow figure .fimg.marked { outline: 3px solid var(--accent); outline-offset: 3px; }
 .ai-ctx button { border: 0; background: none; color: var(--muted); padding: 0 2px; font-size: 16px; line-height: 1; }
 .ai-quick { display: flex; flex-wrap: wrap; gap: 6px; }
 .ai-quick button { border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 6px 11px; font-size: 13px; }
@@ -902,7 +906,7 @@ function closeDoc() {
   flowEl.innerHTML = ''; flowview.hidden = true; flowview.classList.remove('paged'); viewer.hidden = false; $('#pagedno').hidden = true;
   reader.dataset.mode = 'pdf';
   $('#viewpanel').hidden = true; $('#r-view').setAttribute('aria-expanded', 'false');
-  closeAi(); AI.history = []; lastSel = { text: '', at: 0 }; updateAiBadge();
+  closeAi(); AI.history = []; AI.ctx = ''; AI.img = null; clearMark(); lastSel = { text: '', at: 0 }; updateAiBadge();
   R.search = { q: '', matches: [], idx: -1, token: R.search.token + 1, running: false, scanned: 0 };
   $('#r-q').value = ''; $('#searchbar').hidden = true; $('#results').hidden = true; $('#panel').hidden = true;
   $('#r-search').setAttribute('aria-pressed', 'false'); $('#s-list').setAttribute('aria-pressed', 'false');
@@ -1136,6 +1140,7 @@ const hasSelection = () => { const sel = window.getSelection && getSelection(); 
 viewer.addEventListener('click', e => {
   if (Date.now() - suppressClick < 450) return;
   if (hasSelection()) return;
+  if (clearMark()) return;
   if (closeOverlays()) return;
   const now = Date.now();
   if (now - lastTap < 300) {
@@ -1711,6 +1716,7 @@ flowview.addEventListener('wheel', e => {
 }, { passive: false });
 flowview.addEventListener('click', e => {
   if (Date.now() - suppressClick < 450 || hasSelection()) return;
+  if (clearMark()) return;
   if (closeOverlays()) return;
   if (R.mode === 'paged') {
     const r = flowview.getBoundingClientRect(), x = (e.clientX - r.left) / r.width;
@@ -1815,7 +1821,7 @@ $('#vp-lh').addEventListener('change', e => restyleKeepingPlace(() => { flowLH =
 
 /* ---------- KI-Lernhilfe ---------- */
 // In Claude (Artifact) antwortet Claude über das Konto der Nutzerin, sonst Google Gemini mit eigenem kostenlosem Schlüssel.
-const AI = { history: [], busy: false, ctx: '', sample: undefined, setup: false };
+const AI = { history: [], busy: false, ctx: '', img: null, sample: undefined, setup: false };
 let lastSel = { text: '', at: 0 };
 const aiPanel = $('#ai-panel'), aiBody = $('#ai-body');
 async function claudeSample() {
@@ -1848,12 +1854,105 @@ function takeSelection() {
   if (pointerDown) return;
   if (!hasSelection() || !lastSel.text || reader.hidden) return;
   if (reader.classList.contains('immersive')) setImmersive(false);
-  if (aiPanel.hidden) { openAi(); return; }
-  if (AI.ctx === lastSel.text) return;
-  AI.ctx = lastSel.text; lastSel = { text: '', at: 0 };
-  updateAiBadge();
-  if (!AI.busy) renderAi();
+  if (AI.ctx === lastSel.text && !aiPanel.hidden) return;
+  useMarked(lastSel.text, null);
+  markRange();
 }
+/* Markierte Stelle bleibt im Skript sichtbar, solange sie in der KI ist (bis man daneben tippt) */
+const MARK = { range: null, box: null, fig: null };
+function clearMark() {
+  const had = !!(MARK.range || MARK.box || MARK.fig);
+  if (window.CSS && CSS.highlights) CSS.highlights.delete('aimark');
+  if (MARK.box) MARK.box.remove();
+  if (MARK.fig) MARK.fig.classList.remove('marked');
+  MARK.range = MARK.box = MARK.fig = null;
+  return had;
+}
+function markRange() {
+  const sel = getSelection();
+  if (!sel || !sel.rangeCount || !(window.CSS && CSS.highlights && window.Highlight)) return;
+  clearMark();
+  MARK.range = sel.getRangeAt(0).cloneRange();
+  CSS.highlights.set('aimark', new Highlight(MARK.range));
+}
+function useMarked(text, img) {
+  if (AI.img && AI.img !== img) URL.revokeObjectURL(AI.img.url);
+  AI.ctx = text || ''; AI.img = img;
+  lastSel = { text: '', at: 0 };
+  if (aiPanel.hidden) openAi();
+  else { updateAiBadge(); if (!AI.busy) renderAi(); }
+}
+/* Bilder markieren: lange drauf drücken */
+let lp = null;
+function lpStart(e) {
+  if (lp) { clearTimeout(lp.t); lp = null; return; }
+  if (e.pointerType === 'mouse' && e.button !== 0) return;
+  const x = e.clientX, y = e.clientY;
+  lp = { x, y, t: setTimeout(() => { lp = null; markImageAt(x, y); }, 480) };
+}
+function lpMove(e) { if (lp && Math.hypot(e.clientX - lp.x, e.clientY - lp.y) > 10) { clearTimeout(lp.t); lp = null; } }
+function lpEnd() { if (lp) { clearTimeout(lp.t); lp = null; } }
+for (const el of [viewer, flowview]) {
+  el.addEventListener('pointerdown', lpStart);
+  el.addEventListener('pointermove', lpMove);
+  el.addEventListener('pointerup', lpEnd);
+  el.addEventListener('pointercancel', lpEnd);
+}
+async function markImageAt(x, y) {
+  if (reader.hidden || !R.doc) return;
+  const hits = document.elementsFromPoint(x, y);
+  let p, r, fig = null;
+  if (R.mode === 'pdf') {
+    const el = hits.find(n => n.classList && n.classList.contains('page'));
+    if (!el) return;
+    p = R.pages[+el.dataset.n - 1];
+    const b = el.getBoundingClientRect();
+    const px = (x - b.left) / b.width * p.w1, py = (y - b.top) / b.height * p.h1;
+    const area = v => (v[2] - v[0]) * (v[3] - v[1]);
+    // Seitenfüllende Bilder nur bei eingescannten Seiten (ohne Text), sonst sind es Hintergründe
+    let scan = false;
+    try { scan = (await ensureText(p)).raw.trim().length < 30; } catch {}
+    r = (await imageRects(p))
+      .map(q => { const v = p.vp1.convertToViewportRectangle(q); return [Math.max(0, Math.min(v[0], v[2])), Math.max(0, Math.min(v[1], v[3])), Math.min(p.w1, Math.max(v[0], v[2])), Math.min(p.h1, Math.max(v[1], v[3]))]; })
+      .filter(v => px >= v[0] && px <= v[2] && py >= v[1] && py <= v[3] && (scan || area(v) < 0.9 * p.w1 * p.h1))
+      .sort((a, b) => area(a) - area(b))[0];
+    if (!r) return;
+  } else {
+    fig = hits.map(n => n.closest && n.closest('.fimg')).find(Boolean);
+    if (!fig) return;
+    p = R.pages[+fig.dataset.n - 1];
+    r = fig.dataset.r.split(',').map(Number);
+  }
+  if (!p) return;
+  suppressClick = Date.now();
+  clearTimeout(selT);
+  const sel = getSelection(); if (sel) sel.removeAllRanges();
+  clearMark();
+  if (fig) { fig.classList.add('marked'); MARK.fig = fig; }
+  else {
+    const box = document.createElement('div');
+    box.className = 'imgmark';
+    Object.assign(box.style, { left: r[0] / p.w1 * 100 + '%', top: r[1] / p.h1 * 100 + '%', width: (r[2] - r[0]) / p.w1 * 100 + '%', height: (r[3] - r[1]) / p.h1 * 100 + '%' });
+    p.el.appendChild(box); MARK.box = box;
+  }
+  if (navigator.vibrate) navigator.vibrate(12);
+  const blob = await cropImage(p, r);
+  if (!blob) { clearMark(); toast('Das Bild konnte nicht übernommen werden.'); return; }
+  if (reader.classList.contains('immersive')) setImmersive(false);
+  useMarked('', { blob, url: URL.createObjectURL(blob), n: p.n });
+}
+async function cropImage(p, [x0, y0, x1, y1]) {
+  const w = x1 - x0, h = y1 - y0;
+  if (w < 2 || h < 2) return null;
+  const scale = clamp(1024 / Math.max(w, h), 1, 4);
+  const c = document.createElement('canvas');
+  c.width = Math.round(w * scale); c.height = Math.round(h * scale);
+  const ctx = c.getContext('2d', { alpha: false });
+  ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);
+  try { await p.page.render({ canvasContext: ctx, viewport: p.page.getViewport({ scale }), transform: [1, 0, 0, 1, -x0 * scale, -y0 * scale] }).promise; } catch { return null; }
+  return new Promise(res => c.toBlob(res, 'image/jpeg', 0.88));
+}
+const blobB64 = b => new Promise((res, rej) => { const f = new FileReader(); f.onload = () => res(String(f.result).split(',')[1]); f.onerror = rej; f.readAsDataURL(b); });
 function closeAi() {
   aiPanel.hidden = true;
   $('#ai-fab').hidden = false;
@@ -1863,7 +1962,7 @@ async function openAi() {
   closeOverlays();
   aiPanel.hidden = false;
   $('#ai-fab').hidden = true;
-  if (lastSel.text && Date.now() - lastSel.at < 10 * 60e3) { AI.ctx = lastSel.text; lastSel = { text: '', at: 0 }; }
+  if (lastSel.text && Date.now() - lastSel.at < 10 * 60e3) { if (AI.img) URL.revokeObjectURL(AI.img.url); AI.ctx = lastSel.text; AI.img = null; lastSel = { text: '', at: 0 }; if (hasSelection()) markRange(); }
   updateAiBadge();
   await renderAi();
   // Am Rechner direkt ins Eingabefeld (Enter = erklären); am Handy nicht, sonst springt die Tastatur auf
@@ -1951,17 +2050,18 @@ async function renderAi() {
     return;
   }
   let html = '';
-  $('#ai-in').placeholder = AI.ctx ? 'Enter = Stelle erklären, oder frag etwas dazu…' : 'Frag etwas zum Skript…';
-  if (AI.ctx) html += `<div class="ai-ctx"><span>„${esc(AI.ctx)}“</span><button id="ai-ctx-x" aria-label="Markierung entfernen">×</button></div>`;
+  const marked = !!(AI.ctx || AI.img);
+  $('#ai-in').placeholder = marked ? 'Frag etwas dazu…' : 'Frag etwas zum Skript…';
+  if (AI.img) html += `<div class="ai-ctx"><img src="${AI.img.url}" alt=""><span>Bild von Seite ${AI.img.n}</span><button id="ai-ctx-x" aria-label="Markierung entfernen">×</button></div>`;
+  else if (AI.ctx) html += `<div class="ai-ctx"><span>„${esc(AI.ctx)}“</span><button id="ai-ctx-x" aria-label="Markierung entfernen">×</button></div>`;
   if (!AI.history.length) {
-    html += `<p class="ai-empty">${AI.ctx ? 'Drück Enter oder den Pfeil, dann erkläre ich dir die Stelle. Oder stell eine eigene Frage dazu.' : 'Markiere eine Stelle im Skript oder frag direkt etwas zur aktuellen Seite.'}</p>`;
-    html += `<div class="ai-quick">${(AI.ctx ? QUICK : QUICK_PAGE).map(([l, q]) => `<button data-q="${esc(q)}">${l}</button>`).join('')}</div>`;
+    html += `<div class="ai-quick">${(marked ? QUICK : QUICK_PAGE).map(([l, q]) => `<button data-q="${esc(q)}">${l}</button>`).join('')}</div>`;
   }
   for (const m of AI.history) html += m.role === 'user' ? `<div class="msg me">${esc(m.text)}</div>` : `<div class="msg ai${m.err ? ' err' : ''}">${m.text ? mdLite(m.text) : '<span class="dots">Denkt nach</span>'}</div>`;
-  if (AI.history.length && !AI.busy) html += `<div class="ai-quick">${(AI.ctx ? QUICK : QUICK_PAGE).slice(0, 3).map(([l, q]) => `<button data-q="${esc(q)}">${l}</button>`).join('')}</div>`;
+  if (AI.history.length && !AI.busy) html += `<div class="ai-quick">${(marked ? QUICK : QUICK_PAGE).slice(0, 3).map(([l, q]) => `<button data-q="${esc(q)}">${l}</button>`).join('')}</div>`;
   aiBody.innerHTML = html;
   const x = $('#ai-ctx-x');
-  if (x) x.addEventListener('click', () => { AI.ctx = ''; renderAi(); });
+  if (x) x.addEventListener('click', () => { if (AI.img) URL.revokeObjectURL(AI.img.url); AI.ctx = ''; AI.img = null; clearMark(); renderAi(); });
   aiBody.scrollTop = aiBody.scrollHeight;
 }
 aiBody.addEventListener('click', e => { const b = e.target.closest('button[data-q]'); if (b) askAi(b.dataset.q); });
@@ -1969,7 +2069,7 @@ $('#ai-form').addEventListener('submit', e => {
   e.preventDefault();
   const v = $('#ai-in').value.trim();
   // Leeres Feld + markierte Stelle: einfach erklären lassen
-  const q = v || (AI.ctx ? QUICK[0][1] : '');
+  const q = v || (AI.ctx || AI.img ? QUICK[0][1] : '');
   if (q) { $('#ai-in').value = ''; $('#ai-in').style.height = 'auto'; askAi(q); }
 });
 $('#ai-in').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); $('#ai-form').requestSubmit(); } });
@@ -2016,7 +2116,9 @@ async function askAi(q) {
   AI.history.push(answer);
   await renderAi();
   const ctx = `Skript: „${R.meta ? R.meta.title : ''}“, aktuell Seite ${R.cur} von ${R.pages.length}.\n\nPassende Auszüge aus dem Skript:\n${await scriptContext(q + ' ' + (AI.ctx || ''))}` +
-    (AI.ctx ? `\n\nMarkierte Stelle:\n„${AI.ctx}“` : '');
+    (AI.ctx ? `\n\nMarkierte Stelle:\n„${AI.ctx}“` : '') +
+    (AI.img ? `\n\nMarkierte Stelle: das beigefügte Bild von Seite ${AI.img.n} des Skripts. Beschreibe und erkläre, was darauf zu sehen ist, im Zusammenhang mit dem Skript.` : '');
+  const img = AI.img;
   const turns = AI.history.slice(0, -1);
   let lastPaint = 0;
   const onText = t => {
@@ -2027,10 +2129,17 @@ async function askAi(q) {
     const claude = await claudeSample();
     if (claude) {
       const msgs = turns.map((m, i) => ({ role: m.role === 'user' ? 'user' : 'assistant', content: i === 0 ? `${AI_SYSTEM}\n\n${ctx}\n\nFrage: ${m.text}` : m.text }));
-      const res = await claude(msgs, { onText: ({ text }) => onText(text), cache: false });
+      const opts = { onText: ({ text }) => onText(text), cache: false };
+      if (img) {
+        const lim = await claude.limits().catch(() => null);
+        if (lim && lim.images) opts.images = [img.blob];
+        else msgs[0].content += '\n\n(Hinweis: Das Bild konnte nicht mitgeschickt werden. Sag das kurz und hilf mit dem Text der Seite.)';
+      }
+      const res = await claude(msgs, opts);
       answer.text = res.text;
     } else {
       const contents = turns.map((m, i) => ({ role: m.role, parts: [{ text: i === 0 ? `${ctx}\n\nFrage: ${m.text}` : m.text }] }));
+      if (img) contents[0].parts.push({ inline_data: { mime_type: 'image/jpeg', data: await blobB64(img.blob) } });
       answer.text = await gemini(geminiKey(), contents, AI_SYSTEM, onText);
     }
     if (!answer.text) answer.text = 'Ich habe keine Antwort bekommen. Versuch es bitte noch einmal.';
