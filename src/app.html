@@ -269,6 +269,14 @@ select.sort { border: 1px solid var(--line); background: var(--surface); border-
 .pageg { margin-left: auto; }
 .zv { border: 0; background: transparent; min-width: 58px; height: 40px; border-radius: 10px; font-variant-numeric: tabular-nums; font-weight: 700; font-size: 14px; }
 .zv:hover { background: var(--accent-soft); }
+.zpop { position: absolute; z-index: 8; left: max(8px, env(safe-area-inset-left, 0px)); width: min(330px, calc(100% - 16px)); background: var(--surface); border: 1px solid var(--line); border-radius: 16px; box-shadow: 0 18px 50px rgba(0,0,0,.22); padding: 12px; display: flex; flex-direction: column; gap: 12px; }
+.zpop .zp-presets { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.zpop .zp-presets button { border: 1px solid var(--line); background: var(--paper); border-radius: 10px; height: 38px; font-weight: 700; font-size: 13px; font-variant-numeric: tabular-nums; }
+.zpop .zp-presets button.wide { grid-column: span 2; }
+.zpop .zp-presets button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.zpop .zp-row { display: flex; align-items: center; gap: 10px; }
+.zpop .zp-row input { flex: 1; accent-color: var(--accent); }
+.zpop .zp-row output { min-width: 48px; text-align: right; font-weight: 700; font-size: 13px; font-variant-numeric: tabular-nums; }
 .sep { width: 1px; height: 24px; background: var(--line); margin: 0 4px; }
 .pnum { width: 3.4em; text-align: center; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); height: 34px; font-variant-numeric: tabular-nums; -moz-appearance: textfield; }
 .pnum::-webkit-inner-spin-button, .pnum::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
@@ -401,11 +409,19 @@ dialog.sheet::backdrop { background: rgba(10, 14, 18, .45); }
     <div class="rprog"><i id="rprog"></i></div>
   </header>
   <div class="results" id="results" hidden></div>
+  <div class="zpop" id="zpop" hidden role="dialog" aria-label="Größe">
+    <div class="zp-presets" id="zp-presets">
+      <button class="wide" data-z="page">Ganze Seite</button><button class="wide" data-z="1">Seitenbreite</button>
+      <button data-z="0.5">50 %</button><button data-z="0.75">75 %</button><button data-z="1.25">125 %</button><button data-z="1.5">150 %</button>
+      <button data-z="2">200 %</button><button data-z="2.5">250 %</button><button data-z="3">300 %</button><button data-z="4">400 %</button>
+    </div>
+    <div class="zp-row"><input type="range" id="zp-range" min="50" max="400" step="5" aria-label="Größe frei einstellen"><output id="zp-val"></output></div>
+  </div>
   <footer class="bar bottom" id="bottombar">
     <div class="bar-row">
       <div class="zoomg">
         <button class="ib" id="z-out" aria-label="Verkleinern"><svg class="i" viewBox="0 0 24 24"><path d="M5 12h14"/></svg></button>
-        <button class="zv" id="z-fit" title="Auf Breite einpassen">100 %</button>
+        <button class="zv" id="z-fit" title="Größe wählen" aria-haspopup="true" aria-expanded="false">100 %</button>
         <button class="ib" id="z-in" aria-label="Vergrößern"><svg class="i" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
         <span class="sep"></span>
         <button class="ib" id="z-lock" aria-pressed="false" title="Seite fixieren: Zoom und seitliches Verrutschen sperren"></button>
@@ -916,6 +932,7 @@ function closeReader() {
   if (R.meta) { R.meta.lastPage = R.cur; saveMeta(R.meta); }
   closeDoc(); R.meta = null; R.gen++;
   reader.hidden = true; document.body.classList.remove('reading');
+  exitFullscreen();
   releaseWake();
   renderLibrary();
 }
@@ -963,7 +980,37 @@ function updateZoomUI() {
   $('#z-in').disabled = R.locked || R.zoom >= ZMAX;
   $('#z-out').disabled = R.locked || R.zoom <= ZMIN;
   $('#z-fit').disabled = R.locked;
+  if (!$('#zpop').hidden) syncZoomPop();
 }
+/* Größe: Standardgrößen antippen oder frei verschieben */
+const pageZoom = () => { const p = R.pages[R.cur - 1] || R.pages[0]; return (viewer.clientHeight - 24) / (p.h1 * R.fit); };
+function syncZoomPop() {
+  const pz = R.pages.length ? pageZoom() : 0;
+  $$('#zp-presets button').forEach(b => { const z = b.dataset.z === 'page' ? pz : +b.dataset.z; b.setAttribute('aria-pressed', String(Math.abs(z - R.zoom) < 0.01)); });
+  if (document.activeElement !== $('#zp-range')) $('#zp-range').value = Math.round(R.zoom * 100);
+  $('#zp-val').textContent = Math.round(R.zoom * 100) + ' %';
+}
+function toggleZoomPop() {
+  const pop = $('#zpop');
+  if (!pop.hidden) { closeOverlays(); return; }
+  closeOverlays();
+  pop.style.bottom = (reader.getBoundingClientRect().bottom - $('#bottombar').getBoundingClientRect().top + 8) + 'px';
+  pop.hidden = false; $('#z-fit').setAttribute('aria-expanded', 'true');
+  syncZoomPop();
+}
+$('#zp-presets').addEventListener('click', e => {
+  const b = e.target.closest('button[data-z]');
+  if (!b || R.locked) return;
+  if (b.dataset.z === 'page') { setZoom(pageZoom()); scrollToPage(R.cur); }
+  else setZoom(+b.dataset.z);
+});
+let zpRaf = 0;
+$('#zp-range').addEventListener('input', e => {
+  const v = +e.target.value / 100;
+  $('#zp-val').textContent = e.target.value + ' %';
+  cancelAnimationFrame(zpRaf);
+  zpRaf = requestAnimationFrame(() => setZoom(v));
+});
 function applyLock() {
   viewer.classList.toggle('locked', R.locked);
   const b = $('#z-lock');
@@ -1131,7 +1178,8 @@ viewer.addEventListener('wheel', e => {
 /* Tippen: Menü ein/aus, Doppeltippen: Zoom */
 let lastTap = 0, tapT = 0;
 function closeOverlays() {
-  const open = !$('#results').hidden || !$('#panel').hidden || !$('#viewpanel').hidden;
+  const open = !$('#results').hidden || !$('#panel').hidden || !$('#viewpanel').hidden || !$('#zpop').hidden;
+  $('#zpop').hidden = true; $('#z-fit').setAttribute('aria-expanded', 'false');
   $('#results').hidden = true; $('#s-list').setAttribute('aria-pressed', 'false'); $('#panel').hidden = true;
   $('#viewpanel').hidden = true; $('#r-view').setAttribute('aria-expanded', 'false');
   return open;
@@ -1151,8 +1199,20 @@ viewer.addEventListener('click', e => {
   lastTap = now;
   tapT = setTimeout(() => setImmersive(!reader.classList.contains('immersive')), 300);
 });
+// Als Web-App vom Home-Bildschirm: beim Lesen echtes Vollbild (blendet Uhr/WLAN aus, wo das Gerät es erlaubt)
+const standalone = !window.Capacitor && (navigator.standalone || matchMedia('(display-mode: standalone)').matches);
+function enterFullscreen() {
+  const el = document.documentElement, req = el.requestFullscreen || el.webkitRequestFullscreen;
+  if (!standalone || !req || document.fullscreenElement || document.webkitFullscreenElement) return;
+  try { const r = req.call(el, { navigationUI: 'hide' }); if (r && r.catch) r.catch(() => {}); } catch {}
+}
+function exitFullscreen() {
+  const ex = document.exitFullscreen || document.webkitExitFullscreen;
+  if ((document.fullscreenElement || document.webkitFullscreenElement) && ex) { try { const r = ex.call(document); if (r && r.catch) r.catch(() => {}); } catch {} }
+}
 function setImmersive(on) {
   reader.classList.toggle('immersive', on);
+  if (on) enterFullscreen();
   if (on) { closeOverlays(); closeAi(); if (document.activeElement && document.activeElement.blur) document.activeElement.blur(); }
 }
 /* Menü nach oben (bzw. untere Leiste nach unten) wischen */
@@ -1174,7 +1234,7 @@ $('#r-back').addEventListener('click', closeReader);
 $('#r-hide').addEventListener('click', () => setImmersive(true));
 $('#z-in').addEventListener('click', () => setZoom(R.zoom * 1.25));
 $('#z-out').addEventListener('click', () => setZoom(R.zoom / 1.25));
-$('#z-fit').addEventListener('click', () => setZoom(1));
+$('#z-fit').addEventListener('click', toggleZoomPop);
 $('#z-lock').addEventListener('click', () => {
   R.locked = !R.locked; applyLock();
   if (R.meta) { R.meta.locked = R.locked; saveMeta(R.meta); }
