@@ -961,6 +961,7 @@ function restoreAnchor(a, pt) {
   const el = R.pages[a.i].el;
   if (!R.locked || viewer.scrollWidth > viewer.clientWidth) viewer.scrollLeft = el.offsetLeft + a.fx * el.offsetWidth - pt.x;
   viewer.scrollTop = el.offsetTop + a.fy * el.offsetHeight - pt.y;
+  R.lockLeft = viewer.scrollLeft;
 }
 function setZoom(z, pt, anchor) {
   if (!R.doc) return;
@@ -1012,6 +1013,7 @@ $('#zp-range').addEventListener('input', e => {
 });
 function applyLock() {
   viewer.classList.toggle('locked', R.locked);
+  R.lockLeft = viewer.scrollLeft;
   const b = $('#z-lock');
   b.innerHTML = R.locked ? IC.lock : IC.unlock;
   b.setAttribute('aria-pressed', String(R.locked));
@@ -1109,6 +1111,8 @@ async function renderPage(p) {
 /* Scrollen */
 let scrollRaf = 0;
 viewer.addEventListener('scroll', () => {
+  // Fixiert: seitlich nichts verrutschen lassen (iOS scrollt sonst z. B. beim Antippen von Text nach)
+  if (R.locked && Math.abs(viewer.scrollLeft - (R.lockLeft || 0)) > 0.5) viewer.scrollLeft = R.lockLeft || 0;
   if (scrollRaf) return;
   scrollRaf = requestAnimationFrame(() => { scrollRaf = 0; updateCur(); pump(); });
 }, { passive: true });
