@@ -932,7 +932,6 @@ function closeReader() {
   if (R.meta) { R.meta.lastPage = R.cur; saveMeta(R.meta); }
   closeDoc(); R.meta = null; R.gen++;
   reader.hidden = true; document.body.classList.remove('reading');
-  exitFullscreen();
   releaseWake();
   renderLibrary();
 }
@@ -1199,20 +1198,8 @@ viewer.addEventListener('click', e => {
   lastTap = now;
   tapT = setTimeout(() => setImmersive(!reader.classList.contains('immersive')), 300);
 });
-// Als Web-App vom Home-Bildschirm: beim Lesen echtes Vollbild (blendet Uhr/WLAN aus, wo das Gerät es erlaubt)
-const standalone = !window.Capacitor && (navigator.standalone || matchMedia('(display-mode: standalone)').matches);
-function enterFullscreen() {
-  const el = document.documentElement, req = el.requestFullscreen || el.webkitRequestFullscreen;
-  if (!standalone || !req || document.fullscreenElement || document.webkitFullscreenElement) return;
-  try { const r = req.call(el, { navigationUI: 'hide' }); if (r && r.catch) r.catch(() => {}); } catch {}
-}
-function exitFullscreen() {
-  const ex = document.exitFullscreen || document.webkitExitFullscreen;
-  if ((document.fullscreenElement || document.webkitFullscreenElement) && ex) { try { const r = ex.call(document); if (r && r.catch) r.catch(() => {}); } catch {} }
-}
 function setImmersive(on) {
   reader.classList.toggle('immersive', on);
-  if (on) enterFullscreen();
   if (on) { closeOverlays(); closeAi(); if (document.activeElement && document.activeElement.blur) document.activeElement.blur(); }
 }
 /* Menü nach oben (bzw. untere Leiste nach unten) wischen */
