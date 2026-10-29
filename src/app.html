@@ -1837,9 +1837,23 @@ document.addEventListener('selectionchange', () => {
   lastSel = { text: t.slice(0, 4000), at: Date.now(), n: R.cur };
   updateAiBadge();
   clearTimeout(selT);
-  // Nach dem Markieren das Menü (und damit die KI unten rechts) einblenden
-  selT = setTimeout(() => { if (hasSelection() && reader.classList.contains('immersive')) setImmersive(false); }, 700);
+  // Sobald die Markierung fertig ist: Menü einblenden und den Text direkt in die KI übernehmen
+  selT = setTimeout(takeSelection, 800);
 });
+let pointerDown = false;
+document.addEventListener('pointerdown', () => { pointerDown = true; }, true);
+document.addEventListener('pointerup', () => { pointerDown = false; if (lastSel.text && hasSelection()) { clearTimeout(selT); selT = setTimeout(takeSelection, 350); } }, true);
+document.addEventListener('pointercancel', () => { pointerDown = false; }, true);
+function takeSelection() {
+  if (pointerDown) return;
+  if (!hasSelection() || !lastSel.text || reader.hidden) return;
+  if (reader.classList.contains('immersive')) setImmersive(false);
+  if (aiPanel.hidden) { openAi(); return; }
+  if (AI.ctx === lastSel.text) return;
+  AI.ctx = lastSel.text; lastSel = { text: '', at: 0 };
+  updateAiBadge();
+  if (!AI.busy) renderAi();
+}
 function closeAi() {
   aiPanel.hidden = true;
   $('#ai-fab').hidden = false;
@@ -1852,7 +1866,8 @@ async function openAi() {
   if (lastSel.text && Date.now() - lastSel.at < 10 * 60e3) { AI.ctx = lastSel.text; lastSel = { text: '', at: 0 }; }
   updateAiBadge();
   await renderAi();
-  if (!AI.setup) setTimeout(() => $('#ai-in').focus({ preventScroll: true }), 50);
+  // Am Rechner direkt ins Eingabefeld (Enter = erklären); am Handy nicht, sonst springt die Tastatur auf
+  if (!AI.setup && matchMedia('(pointer: fine)').matches) setTimeout(() => $('#ai-in').focus({ preventScroll: true }), 50);
 }
 $('#ai-fab').addEventListener('click', openAi);
 $('#ai-close').addEventListener('click', closeAi);
@@ -1936,9 +1951,10 @@ async function renderAi() {
     return;
   }
   let html = '';
+  $('#ai-in').placeholder = AI.ctx ? 'Enter = Stelle erklären, oder frag etwas dazu…' : 'Frag etwas zum Skript…';
   if (AI.ctx) html += `<div class="ai-ctx"><span>„${esc(AI.ctx)}“</span><button id="ai-ctx-x" aria-label="Markierung entfernen">×</button></div>`;
   if (!AI.history.length) {
-    html += `<p class="ai-empty">${AI.ctx ? 'Was möchtest du zur markierten Stelle wissen?' : 'Markiere eine Stelle im Skript oder frag direkt etwas zur aktuellen Seite.'}</p>`;
+    html += `<p class="ai-empty">${AI.ctx ? 'Drück Enter oder den Pfeil, dann erkläre ich dir die Stelle. Oder stell eine eigene Frage dazu.' : 'Markiere eine Stelle im Skript oder frag direkt etwas zur aktuellen Seite.'}</p>`;
     html += `<div class="ai-quick">${(AI.ctx ? QUICK : QUICK_PAGE).map(([l, q]) => `<button data-q="${esc(q)}">${l}</button>`).join('')}</div>`;
   }
   for (const m of AI.history) html += m.role === 'user' ? `<div class="msg me">${esc(m.text)}</div>` : `<div class="msg ai${m.err ? ' err' : ''}">${m.text ? mdLite(m.text) : '<span class="dots">Denkt nach</span>'}</div>`;
@@ -1949,7 +1965,13 @@ async function renderAi() {
   aiBody.scrollTop = aiBody.scrollHeight;
 }
 aiBody.addEventListener('click', e => { const b = e.target.closest('button[data-q]'); if (b) askAi(b.dataset.q); });
-$('#ai-form').addEventListener('submit', e => { e.preventDefault(); const v = $('#ai-in').value.trim(); if (v) { $('#ai-in').value = ''; askAi(v); } });
+$('#ai-form').addEventListener('submit', e => {
+  e.preventDefault();
+  const v = $('#ai-in').value.trim();
+  // Leeres Feld + markierte Stelle: einfach erklären lassen
+  const q = v || (AI.ctx ? QUICK[0][1] : '');
+  if (q) { $('#ai-in').value = ''; $('#ai-in').style.height = 'auto'; askAi(q); }
+});
 $('#ai-in').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); $('#ai-form').requestSubmit(); } });
 $('#ai-in').addEventListener('input', e => { e.target.style.height = 'auto'; e.target.style.height = Math.min(120, e.target.scrollHeight) + 'px'; });
 
