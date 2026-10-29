@@ -1,0 +1,28 @@
+{
+  "name": "lernbibliothek",
+  "version": "1.0.0",
+  "description": "Bibliothek für Lernskripte (PDF) als App",
+  "scripts": {
+    "build": "node scripts/build-web.mjs",
+    "sync": "npm run build && npx cap sync",
+    "android": "npm run sync && npx cap open android",
+    "ios": "npm run sync && npx cap open ios"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@capacitor/android": "^7.6.10",
+    "@capacitor/app": "^7.1.2",
+    "@capacitor/core": "^7.6.10",
+    "@capacitor/ios": "^7.6.10",
+    "@fontsource/atkinson-hyperlegible": "^5.3.0",
+    "@fontsource/bricolage-grotesque": "^5.3.0",
+    "@supabase/supabase-js": "^2.118.0",
+    "pdfjs-dist": "^3.11.174"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^7.6.10"
+  },
+  "private": true
+}

@@ -1,0 +1,7 @@
+{
+  "appId": "de.gloistein.lernbibliothek",
+  "appName": "Lernbibliothek",
+  "webDir": "www",
+  "android": { "allowMixedContent": false },
+  "ios": { "contentInset": "never" }
+}

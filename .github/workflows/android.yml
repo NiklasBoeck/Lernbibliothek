@@ -1,0 +1,56 @@
+name: Android-App bauen
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - run: npm ci
+      - run: npm run build
+      - run: npx cap sync android
+      - name: Signaturschlüssel aus den Secrets holen (falls vorhanden)
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          if [ -n "$KEYSTORE_B64" ]; then
+            echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/release.keystore"
+            echo "ANDROID_KEYSTORE_FILE=$RUNNER_TEMP/release.keystore" >> "$GITHUB_ENV"
+          fi
+      - name: APK bauen
+        working-directory: android
+        env:
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleRelease --no-daemon
+      - name: APK umbenennen
+        run: cp android/app/build/outputs/apk/release/app-release.apk Lernbibliothek.apk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Lernbibliothek-apk
+          path: Lernbibliothek.apk
+      - name: Als Download bereitstellen
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view android --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1 || \
+            gh release create android --repo "$GITHUB_REPOSITORY" --title "Android-App" \
+              --notes "Neueste Android-Version der Lernbibliothek. Lade Lernbibliothek.apk auf dem Handy herunter und öffne sie."
+          gh release upload android Lernbibliothek.apk --repo "$GITHUB_REPOSITORY" --clobber
