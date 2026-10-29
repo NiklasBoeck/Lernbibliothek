@@ -236,6 +236,8 @@ select.sort { border: 1px solid var(--line); background: var(--surface); border-
 .msg.ai { align-self: flex-start; background: var(--paper); border-bottom-left-radius: 4px; }
 .msg.ai p { margin: 0 0 .5em; } .msg.ai p:last-child { margin: 0; }
 .msg.ai ul, .msg.ai ol { margin: 0 0 .5em; padding-left: 1.2em; }
+.msg.ai a { color: var(--accent); }
+.msg.ai .notscript { font-weight: 700; color: var(--done); }
 .msg.ai code { background: var(--surface); padding: 0 4px; border-radius: 4px; font-size: .92em; }
 .msg.err { background: transparent; border: 1px solid var(--danger); color: var(--danger); }
 .ai-form { display: flex; gap: 6px; padding: 10px; border-top: 1px solid var(--line); }
@@ -1870,7 +1872,7 @@ const QUICK_PAGE = [
 function mdLite(src) {
   const lines = esc(src).split('\n');
   let html = '', list = null;
-  const inline = t => t.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/(^|[^*])\*([^*\n]+)\*/g, '$1<em>$2</em>').replace(/`([^`]+)`/g, '<code>$1</code>');
+  const inline = t => t.replace(/\[([^\]]+)\]\((https:\/\/[^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>').replace(/^(Nicht im Skript:)/, '<span class="notscript">$1</span>').replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/(^|[^*])\*([^*\n]+)\*/g, '$1<em>$2</em>').replace(/`([^`]+)`/g, '<code>$1</code>');
   const close = () => { if (list) { html += `</${list}>`; list = null; } };
   let para = [];
   const flush = () => { if (para.length) { html += `<p>${inline(para.join('<br>'))}</p>`; para = []; } };
@@ -1954,15 +1956,35 @@ $('#ai-in').addEventListener('input', e => { e.target.style.height = 'auto'; e.t
 const AI_SYSTEM = 'Du bist eine geduldige Lernhilfe für eine Studentin, die mit ihrem Vorlesungsskript für eine Klausur lernt. ' +
   'Antworte immer auf Deutsch, klar, freundlich und knapp (meist unter 200 Wörtern, außer es wird mehr verlangt). ' +
   'Nutze einfache Sprache, kurze Absätze, Aufzählungen und konkrete Beispiele. Schreibe Formeln in normaler Textschreibweise. ' +
-  'Stütze dich zuerst auf den mitgeschickten Skripttext. Wenn etwas nicht im Skript steht, sag das kurz und erkläre mit allgemeinem Fachwissen.';
-async function pageContext() {
-  const parts = [];
-  for (const n of [R.cur, R.cur + 1]) {
-    const p = R.pages[n - 1];
-    if (!p) continue;
-    try { const t = await ensureText(p); parts.push(`--- Seite ${n} ---\n${t.raw.slice(0, 5000)}`); } catch {}
+  'Quellen-Regel: Beantworte die Frage vorrangig und möglichst nur mit den mitgeschickten Auszügen aus dem Skript und nenne dabei die Seite (z. B. „Skript, S. 12“). ' +
+  'Nur wenn die Antwort dort nicht oder nur unvollständig steht, ergänze mit Informationen aus dem Internet bzw. allgemeinem Fachwissen. ' +
+  'Kennzeichne das dann deutlich in einer eigenen Zeile, die mit „Nicht im Skript:“ beginnt, damit klar ist, was nicht aus dem Skript stammt. Erfinde keine Seitenzahlen.';
+const STOP = new Set('aber alle allem also auch auf aus bei beim bitte dann dass dein deine dem den der des die dies diese dieser dieses doch dort durch eine einem einen einer eines erkläre etwas für gibt habe hast hat hier ihre immer ist kann kannst mich mir mit nach nicht noch nur oder sein sich sie sind über und uns unter vom von vor was weil welche wenn werden wie wird wir zum zur zwischen mal bitte frage stelle'.split(' '));
+const words = t => (t.toLowerCase().match(/[a-zäöüß0-9]{3,}/g) || []).filter(w => !STOP.has(w));
+// Passende Stellen im ganzen Skript suchen: aktuelle Seite plus die Seiten mit den meisten Treffern
+async function scriptContext(query) {
+  const terms = [...new Set(words(query))].slice(0, 30);
+  const scored = [];
+  for (const p of R.pages) {
+    let t;
+    try { t = await ensureText(p); } catch { continue; }
+    if (!terms.length) continue;
+    let score = 0;
+    for (const w of terms) { let i = -1, c = 0; while ((i = t.low.indexOf(w, i + 1)) >= 0 && c < 8) c++; score += c ? 1 + Math.log(c) : 0; }
+    if (score) scored.push({ n: p.n, score });
+    if (R.pages.length > 60 && p.n % 20 === 0) await tick();
   }
-  return parts.join('\n\n').slice(0, 9000);
+  scored.sort((a, b) => b.score - a.score);
+  const pick = [R.cur, ...scored.slice(0, 5).map(x => x.n)].filter((n, i, a) => a.indexOf(n) === i).sort((a, b) => a - b);
+  let out = '', budget = 22000;
+  for (const n of pick) {
+    const t = R.pages[n - 1] && R.pages[n - 1].text;
+    if (!t || budget <= 0) continue;
+    const chunk = t.raw.slice(0, Math.min(5000, budget));
+    out += `--- Skript, Seite ${n}${n === R.cur ? ' (gerade geöffnet)' : ''} ---\n${chunk}\n\n`;
+    budget -= chunk.length;
+  }
+  return out.trim();
 }
 async function askAi(q) {
   if (AI.busy) return;
@@ -1971,7 +1993,7 @@ async function askAi(q) {
   const answer = { role: 'model', text: '' };
   AI.history.push(answer);
   await renderAi();
-  const ctx = `Skript: „${R.meta ? R.meta.title : ''}“, aktuell Seite ${R.cur} von ${R.pages.length}.\n\nText der aktuellen Seite(n):\n${await pageContext()}` +
+  const ctx = `Skript: „${R.meta ? R.meta.title : ''}“, aktuell Seite ${R.cur} von ${R.pages.length}.\n\nPassende Auszüge aus dem Skript:\n${await scriptContext(q + ' ' + (AI.ctx || ''))}` +
     (AI.ctx ? `\n\nMarkierte Stelle:\n„${AI.ctx}“` : '');
   const turns = AI.history.slice(0, -1);
   let lastPaint = 0;
@@ -2002,19 +2024,22 @@ async function askAi(q) {
     renderAi();
   }
 }
-async function gemini(key, contents, system, onText) {
+async function gemini(key, contents, system, onText, noSearch) {
   for (const model of ['gemini-flash-latest', 'gemini-2.5-flash']) {
     let res;
     try {
       res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?alt=sse&key=${encodeURIComponent(key)}`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ systemInstruction: { parts: [{ text: system }] }, contents, generationConfig: { temperature: 0.4 } })
+        // Google-Suche nur als Ergänzung, wenn das Skript die Antwort nicht enthält (siehe Quellen-Regel)
+        body: JSON.stringify(Object.assign({ systemInstruction: { parts: [{ text: system }] }, contents, generationConfig: { temperature: 0.4 } }, noSearch ? {} : { tools: [{ google_search: {} }] }))
       });
     } catch { throw new Error('Keine Verbindung zur KI. Prüfe deine Internetverbindung.'); }
     if (res.status === 404) continue;
     if (!res.ok) {
       const j = await res.json().catch(() => null);
       const msg = (j && j.error && j.error.message) || '';
+      // Falls die Websuche für diesen Schlüssel nicht erlaubt ist: ohne Websuche erneut fragen
+      if (!noSearch && (res.status === 400 || res.status === 429) && /search|ground|tool/i.test(msg)) return gemini(key, contents, system, onText, true);
       if (res.status === 400 && /api key/i.test(msg)) throw new Error('Der Gemini-Schlüssel stimmt nicht. Prüfe ihn über das Zahnrad oben.');
       if (res.status === 429) throw new Error('Das kostenlose Gemini-Limit ist gerade erreicht. Warte eine Minute und versuch es noch einmal.');
       if (res.status === 403) throw new Error('Google lässt diesen Schlüssel nicht zu. Erstelle auf aistudio.google.com einen neuen und trag ihn über das Zahnrad ein.');
@@ -2022,6 +2047,7 @@ async function gemini(key, contents, system, onText) {
     }
     const rd = res.body.getReader(), dec = new TextDecoder();
     let buf = '', text = '';
+    const sources = [];
     for (;;) {
       const { done, value } = await rd.read();
       if (done) break;
@@ -2033,11 +2059,15 @@ async function gemini(key, contents, system, onText) {
         if (!line.startsWith('data:')) continue;
         try {
           const j = JSON.parse(line.slice(5));
-          const t = ((j.candidates && j.candidates[0] && j.candidates[0].content && j.candidates[0].content.parts) || []).map(x => x.text || '').join('');
+          const cand = j.candidates && j.candidates[0];
+          const t = ((cand && cand.content && cand.content.parts) || []).map(x => x.text || '').join('');
           if (t) { text += t; onText(text); }
+          const chunks = cand && cand.groundingMetadata && cand.groundingMetadata.groundingChunks;
+          if (chunks) for (const c of chunks) if (c.web && c.web.uri && !sources.some(s => s.uri === c.web.uri)) sources.push({ uri: c.web.uri, title: c.web.title || c.web.uri });
         } catch {}
       }
     }
+    if (sources.length) text += '\n\nQuellen aus dem Internet:\n' + sources.slice(0, 5).map(s => `- [${s.title}](${s.uri})`).join('\n');
     return text;
   }
   throw new Error('Kein passendes Gemini-Modell gefunden.');
