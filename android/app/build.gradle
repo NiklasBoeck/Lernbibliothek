@@ -1,5 +1,8 @@
 apply plugin: 'com.android.application'
 
+// Auf GitHub zählt jede Version hoch, damit Updates sich über die alte App installieren lassen
+def runNumber = (System.getenv("GITHUB_RUN_NUMBER") ?: "1").toInteger()
+
 android {
     namespace "de.gloistein.lernbibliothek"
     compileSdk rootProject.ext.compileSdkVersion
@@ -7,9 +10,8 @@ android {
         applicationId "de.gloistein.lernbibliothek"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        // Auf GitHub zählt jede Version hoch, damit Updates sich über die alte App installieren lassen
-        versionCode (System.getenv("GITHUB_RUN_NUMBER") ?: "1").toInteger()
-        versionName "1.0." + (System.getenv("GITHUB_RUN_NUMBER") ?: "0")
+        versionCode runNumber
+        versionName "1.0.${runNumber}"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
