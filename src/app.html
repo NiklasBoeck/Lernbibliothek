@@ -1908,8 +1908,19 @@ async function renderAi() {
     </div>`;
     const save = $('#ai-key-save'), del = $('#ai-key-del'), back = $('#ai-back');
     if (save) save.addEventListener('click', async () => {
-      const v = $('#ai-key').value.trim();
-      if (!/^[A-Za-z0-9_\-]{20,}$/.test(v)) { toast('Das sieht nicht nach einem Gemini-Schlüssel aus. Er beginnt meist mit „AIza“.'); return; }
+      // Leerzeichen, Zeilenumbrüche und Anführungszeichen vom Kopieren entfernen
+      const v = $('#ai-key').value.replace(/[\s"'„“”`]/g, '');
+      if (v.length < 20) { toast('Der Schlüssel ist zu kurz. Kopiere ihn bitte vollständig aus Google AI Studio.', 4000); return; }
+      save.disabled = true; save.textContent = 'Prüfe…';
+      try {
+        const res = await fetch('https://generativelanguage.googleapis.com/v1beta/models?pageSize=1&key=' + encodeURIComponent(v));
+        if (res.status === 400 || res.status === 401 || res.status === 403) {
+          const j = await res.json().catch(() => null);
+          toast('Google lehnt diesen Schlüssel ab' + (j && j.error && j.error.message ? ': ' + j.error.message : '.') + ' Prüfe, ob du ihn vollständig kopiert hast.', 6000);
+          save.disabled = false; save.textContent = 'Speichern';
+          return;
+        }
+      } catch {}
       pref.set('geminiKey', v);
       try { if (SB && Sync.user) await SB.auth.updateUser({ data: { gemini_key: v } }); } catch {}
       AI.setup = false; toast('Schlüssel gespeichert'); renderAi();
