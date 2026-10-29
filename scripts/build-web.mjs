@@ -21,6 +21,12 @@ const fonts = [
   ['Atkinson Hyperlegible', 700, 'atkinson-hyperlegible/files/atkinson-hyperlegible-latin-700-normal.woff2'],
   ['Bricolage Grotesque', 600, 'bricolage-grotesque/files/bricolage-grotesque-latin-600-normal.woff2'],
   ['Bricolage Grotesque', 800, 'bricolage-grotesque/files/bricolage-grotesque-latin-800-normal.woff2'],
+  ['Literata', 400, 'literata/files/literata-latin-400-normal.woff2'],
+  ['Literata', 700, 'literata/files/literata-latin-700-normal.woff2'],
+  ['Lexend', 400, 'lexend/files/lexend-latin-400-normal.woff2'],
+  ['Lexend', 700, 'lexend/files/lexend-latin-700-normal.woff2'],
+  ['Nunito', 400, 'nunito/files/nunito-latin-400-normal.woff2'],
+  ['Nunito', 700, 'nunito/files/nunito-latin-700-normal.woff2'],
 ];
 const faces = fonts.map(([family, weight, path]) => {
   const file = path.split('/').pop();

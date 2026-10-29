@@ -3,7 +3,7 @@
 <meta name="theme-color" content="#1f5f7a">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Lexend:wght@400;700&family=Literata:opsz,wght@7..72,400;7..72,700&family=Nunito:wght@400;700&display=swap">
 <style>
 /* Layout: Bücherregal-Raster mit Klausurstand-Leiste; Leser als randloser Vollbild-Viewer mit ein-/ausblendbaren Leisten */
 :root {
@@ -132,21 +132,22 @@ select.sort { border: 1px solid var(--line); background: var(--surface); border-
 .linkbtn { border: 0; background: none; color: var(--accent); text-decoration: underline; padding: 0; font-size: 13px; }
 
 /* ---------- Leser ---------- */
-.reader { position: fixed; inset: 0; z-index: 20; background: var(--vb-light); }
-.reader[data-doc="sepia"] { background: var(--vb-sepia); }
-.reader[data-doc="dark"] { background: var(--vb-dark); }
+.reader { position: fixed; inset: 0; z-index: 20; background: var(--vb, var(--vb-light)); --doc-bg: #ffffff; --doc-fg: #1b1b1b; }
 .viewer { position: absolute; inset: 0; overflow: auto; overscroll-behavior: contain; touch-action: pan-x pan-y; -webkit-overflow-scrolling: touch; }
 .viewer.locked { overflow-x: hidden; touch-action: pan-y; }
 .pages { display: flex; flex-direction: column; align-items: center; gap: 12px; width: max-content; min-width: 100%; padding-top: calc(env(safe-area-inset-top, 0px) + 72px); padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 120px); transform-origin: 0 0; }
-.page { position: relative; background: var(--page-ph); margin: 0 max(8px, env(safe-area-inset-right, 0px)) 0 max(8px, env(safe-area-inset-left, 0px)); box-shadow: 0 1px 3px rgba(0,0,0,.18); flex: none; }
+.page { position: relative; background: var(--doc-bg); margin: 0 max(8px, env(safe-area-inset-right, 0px)) 0 max(8px, env(safe-area-inset-left, 0px)); box-shadow: 0 1px 3px rgba(0,0,0,.18); flex: none; }
 .page canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
-.reader[data-doc="dark"] .page { background: #1b1b1b; }
-.reader[data-doc="dark"] .page canvas { filter: invert(.9) hue-rotate(180deg); }
-.reader[data-doc="sepia"] .page { background: #f4ecd8; }
-.reader[data-doc="sepia"] .page canvas { filter: sepia(.5) saturate(1.15) brightness(.97); }
+.textLayer { position: absolute; inset: 0; overflow: hidden; line-height: 1; text-align: initial; -webkit-text-size-adjust: none; text-size-adjust: none; forced-color-adjust: none; transform-origin: 0 0; z-index: 3; }
+.textLayer :is(span, br) { color: transparent; position: absolute; white-space: pre; cursor: text; transform-origin: 0% 0%; }
+.textLayer span.markedContent { top: 0; height: 0; }
+.textLayer ::selection { background: rgba(31, 95, 122, .35); }
+.textLayer br::selection { background: transparent; }
+.textLayer .endOfContent { display: block; position: absolute; inset: 100% 0 0; z-index: -1; cursor: default; user-select: none; -webkit-user-select: none; }
+.textLayer .endOfContent.active { top: 0; }
 .page .hl { position: absolute; inset: 0; pointer-events: none; z-index: 2; }
 .hl i { position: absolute; background: var(--marker); opacity: .45; border-radius: 2px; mix-blend-mode: multiply; }
-.reader[data-doc="dark"] .hl i { mix-blend-mode: normal; opacity: .4; }
+.reader[data-dark] .hl i { mix-blend-mode: normal; opacity: .4; }
 .hl i.cur { opacity: .75; outline: 2px solid #e08a00; }
 .page.bm::after { content: ""; position: absolute; top: 0; right: 18px; width: 16px; height: 30px; background: var(--accent); clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 75%, 0 100%); z-index: 3; }
 
@@ -158,6 +159,94 @@ select.sort { border: 1px solid var(--line); background: var(--surface); border-
 .reader.immersive .bar.bottom { transform: translateY(calc(100% + 4px)); }
 .bar-row { display: flex; align-items: center; gap: 2px; min-height: 52px; }
 .grip { width: 40px; height: 4px; border-radius: 4px; background: var(--line); margin: 0 auto 5px; }
+.rprog { position: absolute; left: 0; right: 0; bottom: -1px; height: 2px; background: transparent; }
+.rprog i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .3s ease; }
+.bar.top .bar-row:first-child { gap: 4px; }
+.ib.aa { font-family: var(--font-display); font-weight: 800; font-size: 17px; letter-spacing: -.02em; }
+.ib.aa[aria-expanded="true"] { color: var(--accent); background: var(--accent-soft); }
+.textg { display: none; align-items: center; gap: 2px; }
+.reader:not([data-mode="pdf"]) .zoomg { display: none; }
+.reader:not([data-mode="pdf"]) .textg { display: flex; }
+.textg .tsz { min-width: 46px; text-align: center; font-weight: 700; font-variant-numeric: tabular-nums; font-size: 14px; }
+.textg .ib { font-family: var(--font-display); font-weight: 800; }
+.tocnum { flex: none; min-width: 2.6em; font-weight: 700; color: var(--accent); font-variant-numeric: tabular-nums; font-size: 13px; padding-top: 1px; }
+.panel-body .row { align-items: flex-start; }
+.panel-body .row[data-depth="0"] .t { font-weight: 700; }
+.panel-body .src { padding: 6px 14px 2px; font-size: 12px; color: var(--muted); }
+
+/* Darstellung (Aa) */
+.viewpanel { position: absolute; z-index: 8; top: calc(env(safe-area-inset-top, 0px) + 60px); right: max(8px, env(safe-area-inset-right, 0px)); width: min(380px, calc(100% - 16px)); max-height: calc(100% - env(safe-area-inset-top, 0px) - 140px); overflow: auto; background: var(--surface); border: 1px solid var(--line); border-radius: 18px; box-shadow: 0 18px 50px rgba(0,0,0,.22); padding: 16px; display: flex; flex-direction: column; gap: 16px; }
+.vp-sec { display: flex; flex-direction: column; gap: 8px; }
+.vp-sec[hidden] { display: none; }
+.seg { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; background: var(--paper); border-radius: 12px; padding: 4px; }
+.seg button { border: 0; background: transparent; border-radius: 9px; padding: 8px 4px; font-size: 13px; font-weight: 700; color: var(--muted); display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.seg button svg.i { width: 20px; height: 20px; }
+.seg button[aria-pressed="true"] { background: var(--surface); color: var(--accent); box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+.swatches { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; }
+.sw { width: 100%; max-width: 48px; aspect-ratio: 1; margin: 0 auto; border-radius: 50%; border: 2px solid var(--line); display: grid; place-items: center; font-family: Georgia, serif; font-size: 14px; font-weight: 700; padding: 0; }
+.sw[aria-pressed="true"] { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.swl { font-size: 12px; color: var(--muted); text-align: center; margin-top: -2px; }
+.fonts { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 6px; }
+.fonts button { border: 1.5px solid var(--line); background: transparent; border-radius: 10px; padding: 8px 6px; font-size: 15px; }
+.fonts button[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); }
+.vp-row { display: flex; align-items: center; gap: 10px; }
+.vp-row input[type=range] { flex: 1; accent-color: var(--accent); }
+.vp-note { font-size: 12px; color: var(--muted); margin: 0; }
+
+/* Fließtext und Blättern */
+.flowview { position: absolute; inset: 0; overflow-y: auto; overflow-x: hidden; background: var(--doc-bg); color: var(--doc-fg); overscroll-behavior: contain; }
+.flow { font-family: var(--flow-font, var(--font-body)); font-size: var(--flow-size, 19px); line-height: 1.62; max-width: 46em; margin: 0 auto; padding: calc(env(safe-area-inset-top, 0px) + 76px) max(20px, env(safe-area-inset-right, 0px)) calc(env(safe-area-inset-bottom, 0px) + 130px) max(20px, env(safe-area-inset-left, 0px)); overflow-wrap: break-word; hyphens: auto; -webkit-hyphens: auto; }
+.flow p { margin: 0 0 .8em; }
+.flow h2 { font-size: 1.45em; line-height: 1.2; margin: 1.2em 0 .5em; text-wrap: balance; }
+.flow h3 { font-size: 1.18em; line-height: 1.25; margin: 1em 0 .4em; text-wrap: balance; }
+.flow li { margin: 0 0 .35em 1.2em; list-style: none; text-indent: -1.1em; }
+.flow ul { margin: 0 0 .8em; padding: 0; }
+.flow figure { margin: 1em 0; text-align: center; break-inside: avoid; }
+.flow figure .fimg { display: inline-block; max-width: 100%; background: #fff; border-radius: 4px; vertical-align: top; }
+.flow figure canvas { width: 100%; height: 100%; display: block; border-radius: 4px; }
+.flow .fpn { display: flex; align-items: center; gap: 10px; font-family: var(--font-body); font-size: 12px; color: var(--doc-fg); opacity: .5; margin: 1.6em 0 1em; letter-spacing: .06em; text-transform: uppercase; break-after: avoid; }
+.flow .fpn::before, .flow .fpn::after { content: ""; flex: 1; height: 1px; background: currentColor; opacity: .35; }
+.flow section:first-child .fpn { margin-top: 0; }
+.flow mark.fm { background: var(--marker); color: #222; border-radius: 2px; }
+.flow mark.fm.cur { outline: 2px solid #e08a00; }
+.flow .fnote { opacity: .6; font-style: italic; }
+.flowview.paged { overflow: hidden; touch-action: pan-y pinch-zoom; }
+.flowview.paged .flow { position: absolute; top: calc(env(safe-area-inset-top, 0px) + 34px); bottom: calc(env(safe-area-inset-bottom, 0px) + 46px); left: max(28px, env(safe-area-inset-left, 0px)); right: max(28px, env(safe-area-inset-right, 0px)); max-width: none; margin: 0; padding: 0; overflow: hidden; column-count: var(--cols, 1); column-gap: 56px; column-fill: auto; }
+.flowview.paged .flow figure .fimg { max-height: 70vh; }
+.pagedno { position: absolute; bottom: calc(env(safe-area-inset-bottom, 0px) + 14px); left: 0; right: 0; text-align: center; font-size: 12px; color: var(--doc-fg); opacity: .55; font-variant-numeric: tabular-nums; pointer-events: none; }
+
+/* KI-Lernhilfe */
+.aifab { position: absolute; z-index: 6; right: max(16px, env(safe-area-inset-right, 0px)); bottom: calc(env(safe-area-inset-bottom, 0px) + 128px); width: 56px; height: 56px; border-radius: 18px; border: 0; background: var(--accent); color: var(--on-accent); box-shadow: 0 8px 24px rgba(0,0,0,.25); display: grid; place-items: center; transition: transform .25s ease, opacity .25s ease; }
+.aifab svg.i { width: 26px; height: 26px; }
+.aifab .badge { position: absolute; top: -4px; right: -4px; background: var(--marker); color: var(--marker-ink); font-size: 11px; font-weight: 700; border-radius: 999px; padding: 1px 7px; }
+.reader.immersive .aifab { transform: translateY(20px) scale(.6); opacity: 0; pointer-events: none; }
+.aipanel { position: absolute; z-index: 9; right: max(8px, env(safe-area-inset-right, 0px)); bottom: calc(env(safe-area-inset-bottom, 0px) + 8px); width: min(420px, calc(100% - 16px)); height: min(640px, calc(100% - env(safe-area-inset-top, 0px) - 24px)); background: var(--surface); border: 1px solid var(--line); border-radius: 20px; box-shadow: 0 20px 60px rgba(0,0,0,.3); display: flex; flex-direction: column; overflow: hidden; }
+.ai-head { display: flex; align-items: center; gap: 8px; padding: 10px 8px 10px 16px; border-bottom: 1px solid var(--line); }
+.ai-head h2 { font-family: var(--font-display); font-size: 18px; margin: 0; flex: 1; }
+.ai-head small { display: block; font-family: var(--font-body); font-weight: 400; font-size: 12px; color: var(--muted); }
+.ai-body { flex: 1; overflow: auto; padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; }
+.ai-ctx { background: var(--paper); border-left: 3px solid var(--marker); border-radius: 8px; padding: 8px 10px; font-size: 13px; color: var(--muted); display: flex; gap: 6px; align-items: flex-start; }
+.ai-ctx span { flex: 1; min-width: 0; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+.ai-ctx button { border: 0; background: none; color: var(--muted); padding: 0 2px; font-size: 16px; line-height: 1; }
+.ai-quick { display: flex; flex-wrap: wrap; gap: 6px; }
+.ai-quick button { border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 6px 11px; font-size: 13px; }
+.ai-quick button:hover { border-color: var(--accent); color: var(--accent); }
+.msg { max-width: 92%; padding: 9px 12px; border-radius: 14px; font-size: 14.5px; line-height: 1.5; overflow-wrap: anywhere; }
+.msg.me { align-self: flex-end; background: var(--accent); color: var(--on-accent); border-bottom-right-radius: 4px; }
+.msg.ai { align-self: flex-start; background: var(--paper); border-bottom-left-radius: 4px; }
+.msg.ai p { margin: 0 0 .5em; } .msg.ai p:last-child { margin: 0; }
+.msg.ai ul, .msg.ai ol { margin: 0 0 .5em; padding-left: 1.2em; }
+.msg.ai code { background: var(--surface); padding: 0 4px; border-radius: 4px; font-size: .92em; }
+.msg.err { background: transparent; border: 1px solid var(--danger); color: var(--danger); }
+.ai-form { display: flex; gap: 6px; padding: 10px; border-top: 1px solid var(--line); }
+.ai-form textarea { flex: 1; min-width: 0; resize: none; border: 1px solid var(--line); border-radius: 12px; background: var(--paper); padding: 9px 12px; font: inherit; font-size: 15px; max-height: 120px; }
+.ai-form button { border: 0; border-radius: 12px; background: var(--accent); color: var(--on-accent); width: 44px; display: grid; place-items: center; }
+.ai-setup { display: flex; flex-direction: column; gap: 10px; font-size: 14px; }
+.ai-setup ol { margin: 0; padding-left: 1.2em; display: flex; flex-direction: column; gap: 4px; }
+.ai-setup a { color: var(--accent); }
+.ai-empty { color: var(--muted); font-size: 14px; }
+.dots::after { content: "…"; animation: blink 1s steps(3) infinite; }
+@keyframes blink { 50% { opacity: .3; } }
 .ib { display: inline-grid; place-items: center; width: 42px; height: 42px; border: 0; background: transparent; border-radius: 10px; color: var(--ink); flex: none; }
 .ib:hover { background: var(--accent-soft); }
 .ib[aria-pressed="true"] { color: var(--accent); background: var(--accent-soft); }
@@ -284,6 +373,7 @@ dialog.sheet::backdrop { background: rgba(10, 14, 18, .45); }
 
 <section class="reader" id="reader" hidden data-doc="light">
   <div class="viewer" id="viewer"><div class="pages" id="pages"></div></div>
+  <div class="flowview" id="flowview" hidden><article class="flow" id="flow" lang="de"></article><div class="pagedno" id="pagedno" hidden></div></div>
   <header class="bar top" id="topbar">
     <div class="bar-row">
       <button class="ib" id="r-back" aria-label="Zurück zur Bibliothek" title="Zurück zur Bibliothek"><svg class="i" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
@@ -291,7 +381,7 @@ dialog.sheet::backdrop { background: rgba(10, 14, 18, .45); }
       <button class="ib" id="r-search" aria-label="Im Skript suchen" title="Im Skript suchen (Strg+F)"><svg class="i" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></button>
       <button class="ib" id="r-bm" aria-label="Lesezeichen für diese Seite" title="Lesezeichen für diese Seite"><svg class="i" viewBox="0 0 24 24"><path d="M6 3h12v18l-6-4.5L6 21z"/></svg></button>
       <button class="ib" id="r-panel" aria-label="Inhalt und Lesezeichen" title="Inhalt und Lesezeichen"><svg class="i" viewBox="0 0 24 24"><path d="M9 6h12M9 12h12M9 18h12M4 6h.01M4 12h.01M4 18h.01"/></svg></button>
-      <button class="ib" id="r-theme" aria-label="Lesemodus wechseln" title="Hell / Sepia / Dunkel"></button>
+      <button class="ib aa" id="r-view" aria-label="Darstellung: Ansicht, Farbe, Schrift" title="Darstellung" aria-expanded="false">Aa</button>
       <button class="ib" id="r-hide" aria-label="Nur das Skript zeigen" title="Nur das Skript zeigen"><svg class="i" viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
     </div>
     <div class="bar-row search-row" id="searchbar" hidden>
@@ -302,6 +392,7 @@ dialog.sheet::backdrop { background: rgba(10, 14, 18, .45); }
       <button class="ib" id="s-close" aria-label="Suche schließen"><svg class="i" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
     </div>
     <div class="grip" title="Nach oben wischen: nur lesen"></div>
+    <div class="rprog"><i id="rprog"></i></div>
   </header>
   <div class="results" id="results" hidden></div>
   <footer class="bar bottom" id="bottombar">
@@ -313,6 +404,11 @@ dialog.sheet::backdrop { background: rgba(10, 14, 18, .45); }
         <span class="sep"></span>
         <button class="ib" id="z-lock" aria-pressed="false" title="Seite fixieren: Zoom und seitliches Verrutschen sperren"></button>
         <span class="lockhint">fixiert</span>
+      </div>
+      <div class="textg">
+        <button class="ib" id="t-minus" aria-label="Schrift kleiner" style="font-size:14px">A</button>
+        <span class="tsz" id="t-size">19</span>
+        <button class="ib" id="t-plus" aria-label="Schrift größer" style="font-size:20px">A</button>
       </div>
       <div class="pageg">
         <button class="ib" id="p-prev" aria-label="Vorherige Seite"><svg class="i" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
@@ -333,6 +429,30 @@ dialog.sheet::backdrop { background: rgba(10, 14, 18, .45); }
     </div>
     <div class="panel-body" id="panel-body"></div>
   </aside>
+  <div class="viewpanel" id="viewpanel" hidden>
+    <div class="vp-sec"><p class="lbl">Ansicht</p>
+      <div class="seg" id="vp-mode">
+        <button data-mode="pdf" aria-pressed="false"><svg class="i" viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h3"/></svg>Original</button>
+        <button data-mode="flow" aria-pressed="false"><svg class="i" viewBox="0 0 24 24"><path d="M4 6h16M4 10h16M4 14h16M4 18h10"/></svg>Fließtext</button>
+        <button data-mode="paged" aria-pressed="false"><svg class="i" viewBox="0 0 24 24"><rect x="2.5" y="4" width="8.5" height="16" rx="1.5"/><rect x="13" y="4" width="8.5" height="16" rx="1.5"/></svg>Blättern</button>
+      </div>
+      <p class="vp-note" id="vp-mode-note"></p>
+    </div>
+    <div class="vp-sec"><p class="lbl">Farbe</p><div class="swatches" id="vp-colors"></div><p class="vp-note">Bilder im Skript behalten ihre Originalfarben.</p></div>
+    <div class="vp-sec" id="vp-fontsec"><p class="lbl">Schrift</p><div class="fonts" id="vp-fonts"></div>
+      <div class="vp-row"><span style="font-size:13px">A</span><input type="range" id="vp-size" min="14" max="30" step="1" aria-label="Schriftgröße"><span style="font-size:20px">A</span></div>
+      <div class="vp-row"><span class="vp-note" style="min-width:5.5em">Zeilenabstand</span><input type="range" id="vp-lh" min="1.3" max="2" step="0.05" aria-label="Zeilenabstand"></div>
+    </div>
+  </div>
+  <button class="aifab" id="ai-fab" aria-label="KI-Lernhilfe öffnen" title="KI-Lernhilfe"><svg class="i" viewBox="0 0 24 24"><path d="M12 3l1.8 4.9L19 9.7l-5.2 1.8L12 16.5l-1.8-5L5 9.7l5.2-1.8z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/></svg><span class="badge" id="ai-badge" hidden>Markiert</span></button>
+  <div class="aipanel" id="ai-panel" hidden role="dialog" aria-label="KI-Lernhilfe">
+    <div class="ai-head"><h2>KI-Lernhilfe<small id="ai-sub"></small></h2>
+      <button class="ib" id="ai-set" aria-label="KI-Einstellungen" title="Einstellungen"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
+      <button class="ib" id="ai-close" aria-label="KI-Lernhilfe schließen"><svg class="i" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+    <div class="ai-body" id="ai-body"></div>
+    <form class="ai-form" id="ai-form"><textarea id="ai-in" rows="1" placeholder="Frag etwas zum Skript…" aria-label="Frage an die KI"></textarea><button type="submit" aria-label="Senden"><svg class="i" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button></form>
+  </div>
   <div class="loading" id="loading" hidden>Skript wird geöffnet…</div>
 </section>
 
@@ -682,12 +802,36 @@ sheet.addEventListener('click', e => { if (e.target === sheet) sheet.close(); })
 /* ---------- Leser ---------- */
 const reader = $('#reader'), viewer = $('#viewer'), pagesEl = $('#pages');
 const ZMIN = 0.5, ZMAX = 6, MAXPX = 14e6;
-const R = { doc: null, meta: null, pages: [], zoom: 1, fit: 1, maxW1: 1, locked: false, cur: 1, gen: 0, busy: 0, io: null, outline: null, tab: 'toc', wake: null,
+const R = { doc: null, meta: null, pages: [], zoom: 1, fit: 1, maxW1: 1, locked: false, cur: 1, gen: 0, busy: 0, io: null, outline: null, toc: null, tab: 'toc', wake: null,
+  mode: 'pdf', flow: null, pg: 0, pgTotal: 1,
   search: { q: '', matches: [], idx: -1, token: 0, running: false, scanned: 0 } };
+const flowview = $('#flowview'), flowEl = $('#flow');
+const THEMES = [
+  { id: 'light', name: 'Original', bg: '#ffffff', fg: '#1b1b1b', vb: '' },
+  { id: 'sepia', name: 'Sepia', bg: '#f4ecd8', fg: '#4b3a26', vb: '#d9ccb2' },
+  { id: 'mint', name: 'Salbei', bg: '#e2eee3', fg: '#1d2d22', vb: '#c3d4c6' },
+  { id: 'night', name: 'Nachtblau', bg: '#162036', fg: '#d9e2ee', vb: '#0b1322', dark: true },
+  { id: 'dark', name: 'Dunkel', bg: '#1d1d1f', fg: '#e4e4e4', vb: '#0e0e0f', dark: true },
+  { id: 'black', name: 'Schwarz', bg: '#000000', fg: '#ececec', vb: '#000000', dark: true }
+];
+const FONTS = [
+  { id: 'atkinson', name: 'Atkinson', css: '"Atkinson Hyperlegible", system-ui, sans-serif' },
+  { id: 'literata', name: 'Literata', css: 'Literata, Georgia, serif' },
+  { id: 'lexend', name: 'Lexend', css: 'Lexend, system-ui, sans-serif' },
+  { id: 'nunito', name: 'Nunito', css: 'Nunito, system-ui, sans-serif' },
+  { id: 'georgia', name: 'Georgia', css: 'Georgia, "Times New Roman", serif' },
+  { id: 'system', name: 'System', css: 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif' }
+];
 let docTheme = pref.get('docTheme', 'light');
+if (!THEMES.some(t => t.id === docTheme)) docTheme = 'light';
+let viewMode = pref.get('viewMode', 'pdf');
+let flowFont = pref.get('flowFont', 'atkinson'), flowSize = pref.get('flowSize', 19), flowLH = pref.get('flowLH', 1.62);
+const theme = () => THEMES.find(t => t.id === docTheme) || THEMES[0];
 const dpr = () => Math.min(window.devicePixelRatio || 1, 3);
 const cssScale = () => R.fit * R.zoom;
 const targetScale = () => +(cssScale() * dpr()).toFixed(4);
+const renderKey = () => targetScale() + '|' + docTheme;
+const tick = () => new Promise(r => setTimeout(r, 0));
 
 async function openReader(id) {
   const meta = items.find(m => m.id === id);
@@ -730,7 +874,10 @@ async function openReader(id) {
     R.pages.forEach(p => R.io.observe(p.el));
     const start = clamp(meta.lastPage || 1, 1, n);
     R.cur = start;
+    reader.dataset.mode = 'pdf'; R.mode = 'pdf';
     scrollToPage(start);
+    if (viewMode !== 'pdf') await setMode(viewMode, true);
+    if (gen !== R.gen) return;
     updatePageUI();
     meta.lastOpened = Date.now(); saveMeta(meta);
     keepAwake();
@@ -747,8 +894,13 @@ function closeDoc() {
   if (R.io) { R.io.disconnect(); R.io = null; }
   R.pages.forEach(p => { try { p.task && p.task.cancel(); } catch {} });
   if (R.doc) { try { R.doc.destroy(); } catch {} }
-  R.doc = null; R.pages = []; R.outline = null;
+  if (R.flow && R.flow.io) R.flow.io.disconnect();
+  R.doc = null; R.pages = []; R.outline = null; R.toc = null; R.flow = null; R.flowBase = null; R.mode = 'pdf'; R.pg = 0;
   pagesEl.innerHTML = ''; pagesEl.style.transform = '';
+  flowEl.innerHTML = ''; flowview.hidden = true; flowview.classList.remove('paged'); viewer.hidden = false; $('#pagedno').hidden = true;
+  reader.dataset.mode = 'pdf';
+  $('#viewpanel').hidden = true; $('#r-view').setAttribute('aria-expanded', 'false');
+  closeAi(); AI.history = []; lastSel = { text: '', at: 0 }; updateAiBadge();
   R.search = { q: '', matches: [], idx: -1, token: R.search.token + 1, running: false, scanned: 0 };
   $('#r-q').value = ''; $('#searchbar').hidden = true; $('#results').hidden = true; $('#panel').hidden = true;
   $('#r-search').setAttribute('aria-pressed', 'false'); $('#s-list').setAttribute('aria-pressed', 'false');
@@ -771,6 +923,7 @@ function computeFit() {
 function layout() {
   const s = cssScale();
   for (const p of R.pages) { p.el.style.width = Math.floor(p.w1 * s) + 'px'; p.el.style.height = Math.floor(p.h1 * s) + 'px'; }
+  pagesEl.style.setProperty('--scale-factor', s);
 }
 function indexAtY(y) {
   let lo = 0, hi = R.pages.length - 1;
@@ -827,10 +980,15 @@ function updateCur() {
 }
 function updatePageUI() {
   const n = R.pages.length;
-  if (document.activeElement !== $('#p-num')) $('#p-num').value = R.cur;
-  $('#p-range').value = R.cur;
-  $('#r-sub').textContent = `Seite ${R.cur} von ${n}`;
-  $('#p-prev').disabled = R.cur <= 1; $('#p-next').disabled = R.cur >= n;
+  const paged = R.mode === 'paged';
+  const v = paged ? R.pg + 1 : R.cur, tot = paged ? R.pgTotal : n;
+  if (document.activeElement !== $('#p-num')) $('#p-num').value = v;
+  $('#p-num').max = tot; $('#p-range').max = tot; $('#p-total').textContent = '/ ' + tot;
+  $('#p-range').value = v;
+  $('#r-sub').textContent = paged ? `Skriptseite ${R.cur} von ${n}` : `Seite ${R.cur} von ${n}`;
+  $('#p-prev').disabled = v <= 1; $('#p-next').disabled = v >= tot;
+  $('#rprog').style.width = (tot > 1 ? (v - 1) / (tot - 1) * 100 : 100) + '%';
+  if (paged) { $('#pagedno').textContent = `${v} / ${tot}`; }
   const bm = R.meta && R.meta.bookmarks.includes(R.cur);
   $('#r-bm').classList.toggle('on', !!bm);
   $('#r-bm').setAttribute('aria-pressed', String(!!bm));
@@ -854,18 +1012,19 @@ function onIntersect(entries) {
 }
 function freePage(p) {
   if (p.task) { try { p.task.cancel(); } catch {} }
+  if (p.tl) { p.tl.remove(); p.tl = null; }
   if (p.canvas) { p.canvas.width = 0; p.canvas.height = 0; p.canvas.remove(); p.canvas = null; }
   p.rendered = 0;
 }
 function pump() {
   if (!R.doc) return;
-  const t = targetScale();
+  const t = renderKey();
   const cands = R.pages.filter(p => p.visible && !p.busy && p.rendered !== t)
     .sort((a, b) => Math.abs(a.n - R.cur) - Math.abs(b.n - R.cur));
   while (R.busy < 2 && cands.length) renderPage(cands.shift());
 }
 async function renderPage(p) {
-  const gen = R.gen, target = targetScale();
+  const gen = R.gen, target = targetScale(), key = renderKey(), th = theme();
   p.busy = true; R.busy++;
   let s = target;
   if (p.w1 * p.h1 * s * s > MAXPX) s = Math.sqrt(MAXPX / (p.w1 * p.h1));
@@ -878,8 +1037,15 @@ async function renderPage(p) {
     p.task = p.page.render({ canvasContext: ctx, viewport: vp });
     await p.task.promise;
     if (gen !== R.gen || !p.visible) { c.width = 0; return; }
+    if (th.id !== 'light') {
+      // Text und Flächen umfärben, Bilder in Originalfarben lassen
+      const rects = (await imageRects(p)).map(r => vp.convertToViewportRectangle(r));
+      if (gen !== R.gen) { c.width = 0; return; }
+      recolor(c, th, rects);
+    }
     if (p.canvas) { p.canvas.replaceWith(c); p.canvas.width = 0; } else p.el.prepend(c);
-    p.canvas = c; p.rendered = target;
+    p.canvas = c; p.rendered = key;
+    buildTextLayer(p);
   } catch (e) {
     c.width = 0;
   } finally {
@@ -958,9 +1124,17 @@ viewer.addEventListener('wheel', e => {
 
 /* Tippen: Menü ein/aus, Doppeltippen: Zoom */
 let lastTap = 0, tapT = 0;
+function closeOverlays() {
+  const open = !$('#results').hidden || !$('#panel').hidden || !$('#viewpanel').hidden;
+  $('#results').hidden = true; $('#s-list').setAttribute('aria-pressed', 'false'); $('#panel').hidden = true;
+  $('#viewpanel').hidden = true; $('#r-view').setAttribute('aria-expanded', 'false');
+  return open;
+}
+const hasSelection = () => { const sel = window.getSelection && getSelection(); return !!(sel && !sel.isCollapsed && sel.toString().trim()); };
 viewer.addEventListener('click', e => {
   if (Date.now() - suppressClick < 450) return;
-  if (!$('#results').hidden || !$('#panel').hidden) { $('#results').hidden = true; $('#s-list').setAttribute('aria-pressed', 'false'); $('#panel').hidden = true; return; }
+  if (hasSelection()) return;
+  if (closeOverlays()) return;
   const now = Date.now();
   if (now - lastTap < 300) {
     clearTimeout(tapT); lastTap = 0;
@@ -972,7 +1146,7 @@ viewer.addEventListener('click', e => {
 });
 function setImmersive(on) {
   reader.classList.toggle('immersive', on);
-  if (on) { $('#results').hidden = true; $('#s-list').setAttribute('aria-pressed', 'false'); $('#panel').hidden = true; if (document.activeElement && document.activeElement.blur) document.activeElement.blur(); }
+  if (on) { closeOverlays(); closeAi(); if (document.activeElement && document.activeElement.blur) document.activeElement.blur(); }
 }
 /* Menü nach oben (bzw. untere Leiste nach unten) wischen */
 function swipeToHide(el, dir) {
@@ -999,24 +1173,25 @@ $('#z-lock').addEventListener('click', () => {
   if (R.meta) { R.meta.locked = R.locked; saveMeta(R.meta); }
   toast(R.locked ? 'Seite fixiert: kein Zoomen, kein seitliches Verrutschen' : 'Fixierung gelöst');
 });
-$('#p-prev').addEventListener('click', () => scrollToPage(R.cur - 1));
-$('#p-next').addEventListener('click', () => scrollToPage(R.cur + 1));
-$('#p-range').addEventListener('input', e => scrollToPage(+e.target.value));
-$('#p-num').addEventListener('change', e => { const v = clamp(Math.round(+e.target.value || 1), 1, R.pages.length); scrollToPage(v); e.target.blur(); });
+$('#p-prev').addEventListener('click', () => navStep(-1));
+$('#p-next').addEventListener('click', () => navStep(1));
+$('#p-range').addEventListener('input', e => navTo(+e.target.value));
+$('#p-num').addEventListener('change', e => { navTo(Math.round(+e.target.value || 1)); e.target.blur(); });
 $('#p-num').addEventListener('keydown', e => { if (e.key === 'Enter') e.target.dispatchEvent(new Event('change')); });
 
 function applyDocTheme() {
-  reader.dataset.doc = docTheme;
-  const lab = { light: 'Hell', sepia: 'Sepia', dark: 'Dunkel' }[docTheme];
-  $('#r-theme').innerHTML = docTheme === 'light' ? IC.sun : docTheme === 'sepia' ? IC.sepia : IC.moon;
-  $('#r-theme').title = `Lesemodus: ${lab} (antippen zum Wechseln)`;
-  $('#r-theme').setAttribute('aria-label', `Lesemodus ${lab}, wechseln`);
+  const t = theme();
+  reader.dataset.doc = t.id;
+  reader.style.setProperty('--doc-bg', t.bg);
+  reader.style.setProperty('--doc-fg', t.fg);
+  if (t.vb) reader.style.setProperty('--vb', t.vb); else reader.style.removeProperty('--vb');
+  reader.toggleAttribute('data-dark', !!t.dark);
+  $$('#vp-colors .sw').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.t === t.id)));
 }
-$('#r-theme').addEventListener('click', () => {
-  docTheme = { light: 'sepia', sepia: 'dark', dark: 'light' }[docTheme];
-  pref.set('docTheme', docTheme); applyDocTheme();
-  toast({ light: 'Heller Lesemodus', sepia: 'Sepia-Lesemodus', dark: 'Dunkler Lesemodus' }[docTheme], 1400);
-});
+function setTheme(id) {
+  docTheme = id; pref.set('docTheme', id);
+  applyDocTheme(); pump();
+}
 
 /* Lesezeichen */
 function markBookmarks() {
@@ -1078,19 +1253,784 @@ async function renderPanel() {
     $('#bm-add').addEventListener('click', () => toggleBookmark());
   } else {
     body.innerHTML = '<p class="note">Inhaltsverzeichnis wird geladen…</p>';
-    const ol = await loadOutline();
-    if (R.tab !== 'toc') return;
-    body.innerHTML = ol.length
-      ? ol.map(o => `<button class="row${o.n === R.cur ? ' cur' : ''}" data-n="${o.n || ''}" style="padding-left:${14 + o.depth * 16}px" ${o.n ? '' : 'disabled'}><span class="t">${esc(o.title)}</span><span class="n">${o.n ? 'S. ' + o.n : ''}</span></button>`).join('')
-      : '<p class="note">Dieses Skript hat kein eingebautes Inhaltsverzeichnis. Nutze die Suche oder setze Lesezeichen.</p>';
+    const toc = await loadToc();
+    if (R.tab !== 'toc' || !R.doc) return;
+    body.innerHTML = toc.items.length
+      ? (toc.src === 'auto' ? '<p class="src">Automatisch aus den Überschriften erkannt</p>' : '') +
+        toc.items.map(o => `<button class="row${o.n === R.cur ? ' cur' : ''}" data-n="${o.n || ''}" data-depth="${Math.min(o.depth, 3)}" style="padding-left:${14 + Math.min(o.depth, 4) * 14}px" ${o.n ? '' : 'disabled'}><span class="tocnum">${esc(o.num || '')}</span><span class="t">${esc(o.title)}</span><span class="n">${o.n ? 'S. ' + o.n : ''}</span></button>`).join('')
+      : '<p class="note">In diesem Skript wurden keine Kapitel gefunden. Nutze die Suche oder setze Lesezeichen.</p>';
   }
 }
 $('#panel-body').addEventListener('click', e => {
   const r = e.target.closest('.row');
   if (!r || !r.dataset.n) return;
-  scrollToPage(+r.dataset.n);
-  if (viewer.clientWidth < 700) $('#panel').hidden = true;
+  gotoPage(+r.dataset.n);
+  if (reader.clientWidth < 700) $('#panel').hidden = true;
 });
+
+/* ---------- Farbthemen: Text umfärben, Bilder im Original lassen ---------- */
+const hexRGB = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
+async function imageRects(p) {
+  if (p.imgRects) return p.imgRects;
+  const out = [];
+  try {
+    const OPS = pdfjsLib.OPS;
+    const imgOps = new Set([OPS.paintImageXObject, OPS.paintInlineImageXObject, OPS.paintImageXObjectRepeat, OPS.paintJpegXObject].filter(x => x !== undefined));
+    const ol = await p.page.getOperatorList();
+    const mul = (m, n) => [m[0] * n[0] + m[2] * n[1], m[1] * n[0] + m[3] * n[1], m[0] * n[2] + m[2] * n[3], m[1] * n[2] + m[3] * n[3], m[0] * n[4] + m[2] * n[5] + m[4], m[1] * n[4] + m[3] * n[5] + m[5]];
+    let ctm = [1, 0, 0, 1, 0, 0];
+    const stack = [];
+    for (let i = 0; i < ol.fnArray.length; i++) {
+      const fn = ol.fnArray[i], a = ol.argsArray[i];
+      if (fn === OPS.save) stack.push(ctm);
+      else if (fn === OPS.restore) ctm = stack.pop() || ctm;
+      else if (fn === OPS.transform) ctm = mul(ctm, a);
+      else if (fn === OPS.paintFormXObjectBegin) { stack.push(ctm); if (a && a[0]) ctm = mul(ctm, a[0]); }
+      else if (fn === OPS.paintFormXObjectEnd) ctm = stack.pop() || ctm;
+      else if (imgOps.has(fn)) {
+        const pts = [[0, 0], [1, 0], [0, 1], [1, 1]].map(([x, y]) => [ctm[0] * x + ctm[2] * y + ctm[4], ctm[1] * x + ctm[3] * y + ctm[5]]);
+        const xs = pts.map(q => q[0]), ys = pts.map(q => q[1]);
+        const r = [Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)];
+        if (r[2] - r[0] > 4 && r[3] - r[1] > 4) out.push(r);
+      }
+    }
+  } catch {}
+  p.imgRects = out;
+  return out;
+}
+function recolor(c, t, rects) {
+  const ctx = c.getContext('2d');
+  const w = c.width, h = c.height;
+  let img;
+  try { img = ctx.getImageData(0, 0, w, h); } catch { return; }
+  const d = img.data;
+  const orig = rects.length ? new Uint8ClampedArray(d) : null;
+  const B = hexRGB(t.bg), F = hexRGB(t.fg);
+  const lut = [0, 1, 2].map(k => { const a = new Float32Array(256); for (let L = 0; L < 256; L++) a[L] = F[k] + (B[k] - F[k]) * L / 255; return a; });
+  const [l0, l1, l2] = lut;
+  for (let i = 0; i < d.length; i += 4) {
+    const r = d[i], g = d[i + 1], b = d[i + 2];
+    const L = (r * 77 + g * 150 + b * 29) >> 8;
+    d[i] = l0[L] + (r - L); d[i + 1] = l1[L] + (g - L); d[i + 2] = l2[L] + (b - L);
+  }
+  if (orig) {
+    for (const r of rects) {
+      const x0 = clamp(Math.floor(Math.min(r[0], r[2])), 0, w), x1 = clamp(Math.ceil(Math.max(r[0], r[2])), 0, w);
+      const y0 = clamp(Math.floor(Math.min(r[1], r[3])), 0, h), y1 = clamp(Math.ceil(Math.max(r[1], r[3])), 0, h);
+      for (let y = y0; y < y1; y++) { const a = (y * w + x0) * 4, b = (y * w + x1) * 4; d.set(orig.subarray(a, b), a); }
+    }
+  }
+  ctx.putImageData(img, 0, 0);
+}
+/* Unsichtbare Textebene, damit man im Original-PDF Text markieren kann */
+async function buildTextLayer(p) {
+  if (p.tl || p.tlBusy) return;
+  p.tlBusy = true;
+  try {
+    await ensureText(p);
+    if (!p.visible || !R.doc || p.tl) return;
+    const s = cssScale();
+    const div = document.createElement('div');
+    div.className = 'textLayer';
+    p.el.appendChild(div);
+    await pdfjsLib.renderTextLayer({ textContentSource: p.tc, container: div, viewport: p.page.getViewport({ scale: s }), textDivs: [] }).promise;
+    if (!p.visible) { div.remove(); return; }
+    p.tl = div;
+  } catch {} finally { p.tlBusy = false; }
+}
+
+/* ---------- Inhaltsverzeichnis mit Kapitelnummern ---------- */
+const NUM_RE = /^\s*((?:\d+\.)*\d+)\.?\s+(\S.*)$/;
+const CHAP_RE = /^\s*(?:Kapitel|Lektion|Chapter|Teil|Abschnitt)\s+(\d+(?:\.\d+)*)\s*[:.\-–]?\s*(.*)$/i;
+function numberize(list) {
+  const explicit = list.some(o => NUM_RE.test(o.title) || CHAP_RE.test(o.title));
+  const counters = [];
+  return list.map(o => {
+    let title = (o.title || '').trim(), num = '';
+    const m = title.match(CHAP_RE) || title.match(NUM_RE);
+    counters.length = o.depth + 1;
+    for (let i = 0; i < o.depth; i++) if (!counters[i]) counters[i] = 1;
+    counters[o.depth] = (counters[o.depth] || 0) + 1;
+    if (m) {
+      num = m[1]; title = (m[2] || '').trim() || title;
+      const parts = num.split('.').map(Number);
+      if (parts.length === o.depth + 1) counters.splice(0, counters.length, ...parts);
+    } else if (!explicit) num = counters.slice(0, o.depth + 1).join('.');
+    return Object.assign({}, o, { num, title });
+  });
+}
+async function loadToc() {
+  if (R.toc) return R.toc;
+  const doc = R.doc;
+  const ol = await loadOutline();
+  let toc;
+  if (ol.length) toc = { src: 'pdf', items: numberize(ol) };
+  else toc = { src: 'auto', items: numberize(await autoHeadings()) };
+  if (doc === R.doc) R.toc = toc;
+  return toc;
+}
+async function autoHeadings() {
+  const F = await flowBase();
+  const found = [];
+  for (const p of R.pages) {
+    const lines = await pageLines(p);
+    let last = null;
+    for (const L of lines) {
+      if (isJunk(F, p, L)) continue;
+      const kind = headingKind(F, L);
+      if (!kind) { last = null; continue; }
+      if (last && last.n === p.n && last.size === L.size && L.y - last.y < L.size * 1.8 && !NUM_RE.test(L.text)) { last.title += ' ' + L.text; last.y = L.y; continue; }
+      last = { title: L.text, n: p.n, size: L.size, y: L.y, numbered: NUM_RE.exec(L.text) };
+      found.push(last);
+      if (found.length > 600) break;
+    }
+    if (R.pages.length > 40 && p.n % 10 === 0) await tick();
+  }
+  const sizes = [...new Set(found.map(f => Math.round(f.size)))].sort((a, b) => b - a);
+  return found.map(f => ({
+    title: f.title.slice(0, 140), n: f.n,
+    depth: f.numbered ? f.numbered[1].split('.').length - 1 : Math.min(2, sizes.indexOf(Math.round(f.size)))
+  }));
+}
+
+/* ---------- Text aus dem PDF aufbereiten (Zeilen, Absätze, Überschriften) ---------- */
+async function pageLines(p) {
+  if (p.lines) return p.lines;
+  await ensureText(p);
+  const lines = [];
+  let cur = null;
+  for (const it of p.tc.items) {
+    if (typeof it.str !== 'string') continue;
+    if (!it.str.trim()) { if (it.hasEOL && cur) cur.eol = true; continue; }
+    const [a, b, c, d, x, y] = it.transform;
+    const size = Math.hypot(c, d) || Math.hypot(a, b) || it.height || 10;
+    const [vx, vy] = p.vp1.convertToViewportPoint(x, y);
+    const newLine = !cur || cur.eol || Math.abs(vy - cur.y) > Math.max(cur.size, size) * 0.5 || vx < cur.right - size * 3;
+    if (newLine) { cur = { y: vy, x: vx, right: vx, size, text: '', eol: false }; lines.push(cur); }
+    else if (vx - cur.right > size * 0.18 && !/\s$/.test(cur.text) && !/^\s/.test(it.str)) cur.text += ' ';
+    cur.text += it.str;
+    cur.right = Math.max(cur.right, vx + it.width);
+    cur.size = Math.max(cur.size, size);
+    if (it.hasEOL) cur.eol = true;
+  }
+  for (const L of lines) L.text = L.text.replace(/\s+/g, ' ').trim();
+  p.lines = lines.filter(L => L.text);
+  return p.lines;
+}
+async function flowBase() {
+  if (R.flowBase) return R.flowBase;
+  const doc = R.doc, n = Math.min(R.pages.length, 14);
+  const hist = new Map(), margin = new Map();
+  for (let i = 0; i < n; i++) {
+    const p = R.pages[i];
+    const lines = await pageLines(p);
+    const seen = new Set();
+    for (const L of lines) {
+      const k = Math.round(L.size * 2) / 2;
+      hist.set(k, (hist.get(k) || 0) + L.text.length);
+      const rel = L.y / p.h1;
+      if (rel < 0.08 || rel > 0.92) {
+        const key = L.text.toLowerCase().replace(/\d+/g, '#');
+        if (!seen.has(key)) { seen.add(key); margin.set(key, (margin.get(key) || 0) + 1); }
+      }
+    }
+  }
+  let body = 11, best = -1;
+  for (const [k, v] of hist) if (v > best) { best = v; body = k; }
+  const junk = new Set([...margin].filter(([k, v]) => v >= Math.min(3, Math.max(2, n - 1))).map(([k]) => k));
+  const base = { body, junk };
+  if (doc === R.doc) R.flowBase = base;
+  return base;
+}
+function isJunk(F, p, L) {
+  const rel = L.y / p.h1;
+  if (rel >= 0.08 && rel <= 0.92) return false;
+  if (/^[\s\-–—]*\d{1,4}[\s\-–—]*$/.test(L.text) || /^(seite|page|folie|slide)\s*\d+(\s*(von|of|\/)\s*\d+)?$/i.test(L.text)) return true;
+  return F.junk.has(L.text.toLowerCase().replace(/\d+/g, '#'));
+}
+function headingKind(F, L) {
+  if (L.text.length > 140) return 0;
+  const rel = L.size / F.body;
+  if (rel >= 1.55) return 2;
+  if (rel >= 1.18) return 3;
+  if (rel >= 1.02 && /^\d+(\.\d+)+\.?\s+\S/.test(L.text) && L.text.length < 100 && !/[.,;]$/.test(L.text)) return 3;
+  return 0;
+}
+const BULLET_RE = /^([•▪◦●○■□➢►▶✓✔–\-*·]|\(?[a-zA-Z0-9ivx]{1,3}[\).])\s+/;
+function buildBlocks(F, p, lines) {
+  const blocks = [];
+  const maxRight = lines.reduce((m, L) => Math.max(m, L.right), 0);
+  let cur = null, prev = null;
+  for (const L of lines) {
+    if (isJunk(F, p, L)) continue;
+    const kind = headingKind(F, L);
+    const gap = prev ? L.y - prev.y : 0;
+    const lineH = prev ? prev.size * 1.3 : 0;
+    if (kind) {
+      if (cur && cur.type === 'h' && cur.level === kind && gap > 0 && gap < L.size * 1.8) cur.text += ' ' + L.text;
+      else blocks.push(cur = { type: 'h', level: kind, text: L.text, y: L.y });
+    } else if (BULLET_RE.test(L.text)) {
+      blocks.push(cur = { type: 'li', text: L.text, y: L.y, x: L.x });
+    } else {
+      const sizeJump = prev && Math.abs(L.size - prev.size) > F.body * 0.15;
+      const endPrev = prev && ((/[.:!?]["”)]?$/.test(prev.text) && prev.right < maxRight * 0.85) || prev.right < maxRight * 0.7);
+      const newPara = !cur || cur.type === 'h' || gap > lineH * 1.35 || gap < -L.size || sizeJump || endPrev ||
+        (cur.type === 'li' && L.x <= cur.x + 1);
+      if (newPara) blocks.push(cur = { type: 'p', text: L.text, y: L.y });
+      else if (/[a-zäöüß]-$/.test(cur.text) && /^[a-zäöüß]/.test(L.text)) cur.text = cur.text.slice(0, -1) + L.text;
+      else cur.text += ' ' + L.text;
+    }
+    prev = L;
+  }
+  return blocks;
+}
+async function addSection(F, p) {
+  const lines = await pageLines(p);
+  const base = await flowBase();
+  const blocks = buildBlocks(base, p, lines);
+  const textLen = blocks.reduce((a, b) => a + b.text.length, 0);
+  const area = p.w1 * p.h1;
+  const figs = (await imageRects(p)).map(r => {
+    const v = p.vp1.convertToViewportRectangle(r);
+    return [Math.min(v[0], v[2]), Math.min(v[1], v[3]), Math.max(v[0], v[2]), Math.max(v[1], v[3])];
+  }).filter(r => {
+    const w = r[2] - r[0], h = r[3] - r[1];
+    if (w < 50 || h < 35) return false;
+    if (w * h > area * 0.85 && textLen > 200) return false;
+    return true;
+  });
+  if (!textLen && !figs.length) figs.push([0, 0, p.w1, p.h1]);
+  for (const r of figs) {
+    const fig = { type: 'img', rect: r, y: r[1] };
+    const i = blocks.findIndex(b => b.y > r[1]);
+    if (i < 0) blocks.push(fig); else blocks.splice(i, 0, fig);
+  }
+  let html = `<div class="fpn">Seite ${p.n}</div>`, inList = false;
+  for (const b of blocks) {
+    if (b.type === 'li' && !inList) { html += '<ul>'; inList = true; }
+    if (b.type !== 'li' && inList) { html += '</ul>'; inList = false; }
+    if (b.type === 'h') html += `<h${b.level}>${esc(b.text)}</h${b.level}>`;
+    else if (b.type === 'li') html += `<li>${esc(b.text)}</li>`;
+    else if (b.type === 'p') html += `<p>${esc(b.text)}</p>`;
+    else {
+      const [x0, y0, x1, y1] = b.rect, w = x1 - x0, h = y1 - y0;
+      html += `<figure><span class="fimg" data-n="${p.n}" data-r="${b.rect.map(v => v.toFixed(1)).join(',')}" style="width:min(100%,${Math.round(w * 1.35)}px);aspect-ratio:${w.toFixed(1)}/${h.toFixed(1)}"></span></figure>`;
+    }
+  }
+  if (inList) html += '</ul>';
+  const sec = document.createElement('section');
+  sec.dataset.n = p.n;
+  sec.innerHTML = html;
+  flowEl.appendChild(sec);
+  F.secs[p.n - 1] = sec;
+  $$('.fimg', sec).forEach(el => F.io.observe(el));
+}
+function ensureFlow() {
+  if (R.flow) return R.flow.first;
+  const doc = R.doc;
+  const F = R.flow = { secs: [], done: false };
+  F.io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { F.io.unobserve(e.target); renderFigure(e.target); } }), { root: flowview, rootMargin: '100% 100%' });
+  let firstDone;
+  F.first = new Promise(r => { firstDone = r; });
+  F.all = (async () => {
+    const need = Math.min(R.pages.length, R.cur + 2);
+    for (const p of R.pages) {
+      if (doc !== R.doc) return firstDone();
+      try { await addSection(F, p); } catch (e) { console.error(e); }
+      if (p.n === need) firstDone();
+      else if (p.n < need) $('#loading').textContent = `Text wird aufbereitet… ${p.n}/${need}`;
+      if (p.n % 3 === 0) { await tick(); if (R.mode === 'paged') pagedMeasure(); }
+    }
+    firstDone();
+    if (doc !== R.doc) return;
+    F.done = true;
+    if (R.mode === 'paged') { pagedMeasure(); updatePageUI(); }
+    if (R.mode !== 'pdf' && R.search.q.length >= 2) flowSearch(R.search.q, true);
+  })();
+  return F.first;
+}
+async function renderFigure(el) {
+  const p = R.pages[+el.dataset.n - 1];
+  if (!p || el.firstChild) return;
+  const [x0, y0, x1, y1] = el.dataset.r.split(',').map(Number);
+  const w = x1 - x0, h = y1 - y0;
+  const scale = clamp((el.clientWidth || w) * dpr() / w, 1, 4);
+  const c = document.createElement('canvas');
+  c.width = Math.max(1, Math.round(w * scale)); c.height = Math.max(1, Math.round(h * scale));
+  const ctx = c.getContext('2d', { alpha: false });
+  ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);
+  try {
+    await p.page.render({ canvasContext: ctx, viewport: p.page.getViewport({ scale }), transform: [1, 0, 0, 1, -x0 * scale, -y0 * scale] }).promise;
+    c.style.objectFit = 'contain';
+    el.appendChild(c);
+  } catch {}
+}
+
+/* ---------- Ansichten: Original, Fließtext, Blättern ---------- */
+async function setMode(mode, initial) {
+  if (!R.doc) return;
+  const n = R.cur;
+  viewMode = mode; pref.set('viewMode', mode);
+  R.mode = mode; reader.dataset.mode = mode;
+  updateViewPanel();
+  if (mode === 'pdf') {
+    flowview.hidden = true; viewer.hidden = false; $('#pagedno').hidden = true;
+    requestAnimationFrame(() => { computeFit(); layout(); scrollToPage(n); pump(); });
+  } else {
+    viewer.hidden = true; flowview.hidden = false;
+    flowview.classList.toggle('paged', mode === 'paged');
+    $('#pagedno').hidden = mode !== 'paged';
+    applyFlowStyle();
+    if (!R.flow || !R.flow.done) { $('#loading').textContent = 'Text wird aufbereitet…'; $('#loading').hidden = false; }
+    const doc = R.doc;
+    await ensureFlow();
+    if (doc !== R.doc || R.mode !== mode) return;
+    $('#loading').hidden = true;
+    if (mode === 'paged') pagedMeasure();
+    gotoPage(n);
+    if (!initial && !pref.get('hint-' + mode, false)) {
+      pref.set('hint-' + mode, true);
+      toast(mode === 'paged' ? 'Blättern: nach links/rechts wischen oder an den Rand tippen. Tippen in die Mitte zeigt das Menü.' : 'Fließtext: Schrift, Größe und Farbe stellst du unter „Aa“ ein.', 5200);
+    }
+  }
+  if (R.search.q.length >= 2) runSearch(R.search.q);
+  updatePageUI();
+}
+function gotoPage(n) {
+  n = clamp(n, 1, R.pages.length);
+  if (R.mode === 'pdf') return scrollToPage(n);
+  const F = R.flow, sec = F && F.secs[n - 1];
+  if (!sec) { toast('Diese Seite wird noch aufbereitet. Einen Moment…', 1800); return; }
+  if (R.mode === 'flow') { flowview.scrollTop = sec.offsetTop - 64; R.cur = n; updatePageUI(); saveSoon(); }
+  else pagedGo(pagedIndexOf(sec.firstElementChild));
+}
+function navStep(d) {
+  if (R.mode === 'paged') pagedGo(R.pg + d, true);
+  else gotoPage(R.cur + d);
+}
+function navTo(v) {
+  if (R.mode === 'paged') pagedGo(v - 1);
+  else gotoPage(v);
+}
+function applyFlowStyle() {
+  const f = FONTS.find(x => x.id === flowFont) || FONTS[0];
+  flowEl.style.setProperty('--flow-font', f.css);
+  flowEl.style.setProperty('--flow-size', flowSize + 'px');
+  flowEl.style.lineHeight = flowLH;
+  $('#t-size').textContent = flowSize;
+  $('#vp-size').value = flowSize; $('#vp-lh').value = flowLH;
+  $$('#vp-fonts button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.f === flowFont)));
+  flowview.style.setProperty('--cols', flowview.clientWidth >= 1000 ? 2 : 1);
+}
+function restyleKeepingPlace(fn) {
+  const n = R.cur;
+  let frac = 0;
+  const sec = R.flow && R.flow.secs[n - 1];
+  if (R.mode === 'flow' && sec) frac = (flowview.scrollTop + 64 - sec.offsetTop) / Math.max(1, sec.offsetHeight);
+  fn(); applyFlowStyle();
+  if (R.mode === 'paged') { pagedMeasure(); gotoPage(n); }
+  else if (R.mode === 'flow' && sec) flowview.scrollTop = sec.offsetTop - 64 + frac * sec.offsetHeight;
+}
+function setFlowSize(v) {
+  v = clamp(v, 14, 30);
+  if (v === flowSize) return;
+  restyleKeepingPlace(() => { flowSize = v; pref.set('flowSize', v); });
+}
+$('#t-minus').addEventListener('click', () => setFlowSize(flowSize - 1));
+$('#t-plus').addEventListener('click', () => setFlowSize(flowSize + 1));
+
+/* Fließtext: aktuelle Seite beim Scrollen */
+let flowRaf = 0;
+flowview.addEventListener('scroll', () => {
+  if (R.mode !== 'flow' || flowRaf) return;
+  flowRaf = requestAnimationFrame(() => {
+    flowRaf = 0;
+    const secs = (R.flow && R.flow.secs) || [];
+    const y = flowview.scrollTop + flowview.clientHeight * 0.35;
+    let n = 1;
+    for (let lo = 0, hi = secs.length - 1; lo <= hi;) {
+      const mid = (lo + hi) >> 1;
+      if (secs[mid] && secs[mid].offsetTop <= y) { n = mid + 1; lo = mid + 1; } else hi = mid - 1;
+    }
+    if (n !== R.cur) { R.cur = n; updatePageUI(); saveSoon(); }
+  });
+}, { passive: true });
+
+/* Blättern: Text in Bildschirmseiten (Spalten) */
+const PAGED_GAP = 56;
+function pagedMeasure() {
+  const w = flowEl.clientWidth;
+  if (!w) return;
+  R.pgTotal = Math.max(1, Math.round((flowEl.scrollWidth + PAGED_GAP) / (w + PAGED_GAP)));
+  if (R.pg > R.pgTotal - 1) R.pg = R.pgTotal - 1;
+}
+function pagedIndexOf(el) {
+  if (!el) return 0;
+  const x = el.getBoundingClientRect().left - flowEl.getBoundingClientRect().left + flowEl.scrollLeft;
+  return Math.max(0, Math.floor((x + 4) / (flowEl.clientWidth + PAGED_GAP)));
+}
+function pagedGo(i, smooth) {
+  pagedMeasure();
+  R.pg = clamp(i, 0, R.pgTotal - 1);
+  const left = R.pg * (flowEl.clientWidth + PAGED_GAP);
+  const reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  flowEl.scrollTo({ left, behavior: smooth && !reduce ? 'smooth' : 'auto' });
+  const secs = (R.flow && R.flow.secs) || [];
+  let n = 1;
+  for (let lo = 0, hi = secs.length - 1; lo <= hi;) {
+    const mid = (lo + hi) >> 1;
+    if (secs[mid] && pagedIndexOf(secs[mid].firstElementChild) <= R.pg) { n = mid + 1; lo = mid + 1; } else hi = mid - 1;
+  }
+  R.cur = n;
+  updatePageUI(); saveSoon();
+}
+let swipe = null, wheelLock = 0;
+flowview.addEventListener('touchstart', e => {
+  if (e.touches.length !== 1) { swipe = null; return; }
+  swipe = { x: e.touches[0].clientX, y: e.touches[0].clientY, t: Date.now() };
+  if (reader.classList.contains('immersive') && e.touches[0].clientY < 60) swipe.pull = true;
+}, { passive: true });
+flowview.addEventListener('touchend', e => {
+  if (!swipe) return;
+  const t = e.changedTouches[0], dx = t.clientX - swipe.x, dy = t.clientY - swipe.y;
+  if (swipe.pull && dy > 50) { setImmersive(false); suppressClick = Date.now(); }
+  else if (R.mode === 'paged' && Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy) * 1.3 && !hasSelection()) {
+    navStep(dx < 0 ? 1 : -1); suppressClick = Date.now();
+  }
+  swipe = null;
+});
+flowview.addEventListener('wheel', e => {
+  if (R.mode !== 'paged') return;
+  e.preventDefault();
+  const d = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+  if (Math.abs(d) < 12 || Date.now() < wheelLock) return;
+  wheelLock = Date.now() + 380;
+  navStep(d > 0 ? 1 : -1);
+}, { passive: false });
+flowview.addEventListener('click', e => {
+  if (Date.now() - suppressClick < 450 || hasSelection()) return;
+  if (closeOverlays()) return;
+  if (R.mode === 'paged') {
+    const r = flowview.getBoundingClientRect(), x = (e.clientX - r.left) / r.width;
+    if (x < 0.25) return navStep(-1);
+    if (x > 0.75) return navStep(1);
+  }
+  setImmersive(!reader.classList.contains('immersive'));
+});
+new ResizeObserver(() => {
+  if (R.mode === 'pdf' || !R.flow) return;
+  const n = R.cur;
+  applyFlowStyle();
+  if (R.mode === 'paged') { pagedMeasure(); gotoPage(n); }
+}).observe(flowview);
+
+/* Suche im Fließtext */
+function flowClearMarks() {
+  const marks = $$('mark.fm', flowEl);
+  if (!marks.length) return;
+  const parents = new Set();
+  marks.forEach(m => { parents.add(m.parentNode); m.replaceWith(document.createTextNode(m.textContent)); });
+  parents.forEach(p => p && p.normalize());
+}
+function flowSearch(q, keepIdx) {
+  const S = R.search;
+  flowClearMarks();
+  const prevN = keepIdx && S.matches[S.idx] ? S.matches[S.idx].n : null;
+  S.matches = []; S.idx = -1;
+  if (q.length < 2) { updateSearchUI(); renderResults(); return; }
+  const ql = q.toLowerCase();
+  const walker = document.createTreeWalker(flowEl, NodeFilter.SHOW_TEXT, { acceptNode: n => n.parentElement.closest('.fpn') ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT });
+  const nodes = [];
+  while (walker.nextNode()) nodes.push(walker.currentNode);
+  for (const node of nodes) {
+    const text = node.nodeValue, low = text.toLowerCase();
+    let i = low.indexOf(ql);
+    if (i < 0) continue;
+    let rest = node, offset = 0;
+    while (i >= 0) {
+      const mid = rest.splitText(i - offset);
+      rest = mid.splitText(ql.length);
+      const mark = document.createElement('mark');
+      mark.className = 'fm';
+      mid.replaceWith(mark); mark.appendChild(mid);
+      S.matches.push({ n: +mark.closest('section').dataset.n, el: mark, snip: snippet(text, i, ql.length) });
+      offset = i + ql.length;
+      i = low.indexOf(ql, offset);
+    }
+  }
+  const start = S.matches.findIndex(m => m.n >= (prevN || R.cur));
+  if (S.matches.length) flowGoMatch(start < 0 ? 0 : start);
+  else updateSearchUI();
+  if (!$('#results').hidden) renderResults();
+}
+function flowGoMatch(i) {
+  const S = R.search;
+  if (!S.matches.length) return;
+  const old = S.matches[S.idx];
+  if (old && old.el) old.el.classList.remove('cur');
+  S.idx = (i + S.matches.length) % S.matches.length;
+  const m = S.matches[S.idx];
+  m.el.classList.add('cur');
+  if (R.mode === 'flow') {
+    const r = m.el.getBoundingClientRect(), vr = flowview.getBoundingClientRect();
+    flowview.scrollTop += r.top - vr.top - flowview.clientHeight * 0.35;
+  } else pagedGo(pagedIndexOf(m.el));
+  updateSearchUI();
+}
+
+/* Darstellungs-Menü (Aa) */
+function buildViewPanel() {
+  $('#vp-colors').innerHTML = THEMES.map(t => `<div><button class="sw" data-t="${t.id}" aria-pressed="false" aria-label="${t.name}" style="background:${t.bg};color:${t.fg}">Aa</button><div class="swl">${t.name}</div></div>`).join('');
+  $('#vp-fonts').innerHTML = FONTS.map(f => `<button data-f="${f.id}" aria-pressed="false" style="font-family:${f.css.replace(/"/g, '&quot;')}">${f.name}</button>`).join('');
+}
+function updateViewPanel() {
+  $$('#vp-mode button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.mode === viewMode)));
+  $('#vp-mode-note').textContent = {
+    pdf: 'Die Originalseiten des PDFs, mit Zoom und Fixierung.',
+    flow: 'Der Text des Skripts ohne Seitenränder, zum Durchscrollen. Formeln und Tabellen können anders aussehen als im Original.',
+    paged: 'Der Text füllt den ganzen Bildschirm und du blätterst Seite für Seite: wischen oder an den Rand tippen.'
+  }[viewMode];
+  $('#vp-fontsec').hidden = viewMode === 'pdf';
+  applyDocTheme();
+}
+buildViewPanel();
+$('#r-view').addEventListener('click', () => {
+  const vp = $('#viewpanel');
+  const open = vp.hidden;
+  closeOverlays(); closeAi();
+  vp.hidden = !open;
+  $('#r-view').setAttribute('aria-expanded', String(open));
+  if (open) updateViewPanel();
+});
+$('#vp-mode').addEventListener('click', e => { const b = e.target.closest('button'); if (b && b.dataset.mode !== R.mode) setMode(b.dataset.mode); });
+$('#vp-colors').addEventListener('click', e => { const b = e.target.closest('.sw'); if (b) setTheme(b.dataset.t); });
+$('#vp-fonts').addEventListener('click', e => {
+  const b = e.target.closest('button');
+  if (b) restyleKeepingPlace(() => { flowFont = b.dataset.f; pref.set('flowFont', flowFont); });
+});
+$('#vp-size').addEventListener('input', e => setFlowSize(+e.target.value));
+$('#vp-lh').addEventListener('change', e => restyleKeepingPlace(() => { flowLH = +e.target.value; pref.set('flowLH', flowLH); }));
+
+/* ---------- KI-Lernhilfe ---------- */
+// In Claude (Artifact) antwortet Claude über das Konto der Nutzerin, sonst Google Gemini mit eigenem kostenlosem Schlüssel.
+const AI = { history: [], busy: false, ctx: '', sample: undefined, setup: false };
+let lastSel = { text: '', at: 0 };
+const aiPanel = $('#ai-panel'), aiBody = $('#ai-body');
+async function claudeSample() {
+  if (AI.sample !== undefined) return AI.sample;
+  try { AI.sample = window.claude && window.claude.use ? await window.claude.use('sample') : null; } catch { AI.sample = null; }
+  return AI.sample;
+}
+const geminiKey = () => pref.get('geminiKey', '');
+function updateAiBadge() {
+  const fresh = lastSel.text && Date.now() - lastSel.at < 10 * 60e3;
+  $('#ai-badge').hidden = !fresh || !aiPanel.hidden;
+}
+let selT = 0;
+document.addEventListener('selectionchange', () => {
+  if (reader.hidden) return;
+  const sel = getSelection();
+  const t = sel && !sel.isCollapsed ? sel.toString().replace(/\s+/g, ' ').trim() : '';
+  if (!t || !(viewer.contains(sel.anchorNode) || flowview.contains(sel.anchorNode))) return;
+  lastSel = { text: t.slice(0, 4000), at: Date.now(), n: R.cur };
+  updateAiBadge();
+  clearTimeout(selT);
+  // Nach dem Markieren das Menü (und damit die KI unten rechts) einblenden
+  selT = setTimeout(() => { if (hasSelection() && reader.classList.contains('immersive')) setImmersive(false); }, 700);
+});
+function closeAi() {
+  aiPanel.hidden = true;
+  $('#ai-fab').hidden = false;
+  updateAiBadge();
+}
+async function openAi() {
+  closeOverlays();
+  aiPanel.hidden = false;
+  $('#ai-fab').hidden = true;
+  if (lastSel.text && Date.now() - lastSel.at < 10 * 60e3) { AI.ctx = lastSel.text; lastSel = { text: '', at: 0 }; }
+  updateAiBadge();
+  await renderAi();
+  if (!AI.setup) setTimeout(() => $('#ai-in').focus({ preventScroll: true }), 50);
+}
+$('#ai-fab').addEventListener('click', openAi);
+$('#ai-close').addEventListener('click', closeAi);
+$('#ai-set').addEventListener('click', () => { AI.setup = !AI.setup; renderAi(); });
+
+const QUICK = [
+  ['Erklär mir das', 'Erkläre mir die markierte Stelle verständlich.'],
+  ['Einfacher, bitte', 'Erkläre die markierte Stelle noch einfacher, wie für jemanden ohne Vorwissen.'],
+  ['Beispiel', 'Gib mir ein konkretes Beispiel zur markierten Stelle.'],
+  ['Prüfungsfrage', 'Stell mir eine typische Prüfungsfrage zur markierten Stelle. Verrate die Lösung erst, wenn ich antworte.'],
+];
+const QUICK_PAGE = [
+  ['Seite zusammenfassen', 'Fasse die aktuelle Seite in den wichtigsten Punkten zusammen.'],
+  ['Prüfungsfragen zur Seite', 'Stell mir 3 Prüfungsfragen zur aktuellen Seite. Lösungen bitte erst nach meiner Antwort.'],
+  ['Begriffe erklären', 'Erkläre die wichtigsten Fachbegriffe auf dieser Seite kurz.'],
+];
+function mdLite(src) {
+  const lines = esc(src).split('\n');
+  let html = '', list = null;
+  const inline = t => t.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/(^|[^*])\*([^*\n]+)\*/g, '$1<em>$2</em>').replace(/`([^`]+)`/g, '<code>$1</code>');
+  const close = () => { if (list) { html += `</${list}>`; list = null; } };
+  let para = [];
+  const flush = () => { if (para.length) { html += `<p>${inline(para.join('<br>'))}</p>`; para = []; } };
+  for (const raw of lines) {
+    const l = raw.trimEnd();
+    let m;
+    if ((m = l.match(/^\s*[-*•]\s+(.*)/))) { flush(); if (list !== 'ul') { close(); html += '<ul>'; list = 'ul'; } html += `<li>${inline(m[1])}</li>`; }
+    else if ((m = l.match(/^\s*\d+[.)]\s+(.*)/))) { flush(); if (list !== 'ol') { close(); html += '<ol>'; list = 'ol'; } html += `<li>${inline(m[1])}</li>`; }
+    else if ((m = l.match(/^#{1,4}\s+(.*)/))) { flush(); close(); html += `<p><strong>${inline(m[1])}</strong></p>`; }
+    else if (!l.trim()) { flush(); close(); }
+    else { close(); para.push(l); }
+  }
+  flush(); close();
+  return html;
+}
+async function renderAi() {
+  const claude = await claudeSample();
+  const key = geminiKey();
+  $('#ai-sub').textContent = claude ? 'antwortet über Claude' : key ? 'antwortet über Google Gemini' : 'noch nicht eingerichtet';
+  const needSetup = AI.setup || (!claude && !key);
+  $('#ai-form').hidden = needSetup;
+  if (needSetup) {
+    aiBody.innerHTML = `<div class="ai-setup">
+      ${claude ? '<p>Hier läuft die KI über Claude. Du musst nichts einrichten.</p>' : `
+      <p><strong>Kostenlose KI einrichten (einmalig, ca. 2 Minuten)</strong></p>
+      <ol>
+        <li>Öffne <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a> und melde dich mit deinem Google-Konto an.</li>
+        <li>Tippe auf „API-Schlüssel erstellen“ und kopiere den Schlüssel.</li>
+        <li>Füge ihn hier ein und speichere.</li>
+      </ol>
+      <label class="fld">Gemini-Schlüssel<input id="ai-key" type="password" autocomplete="off" placeholder="AIza…" value="${esc(key)}"></label>
+      <p class="vp-note">Der Schlüssel bleibt bei dir: auf diesem Gerät und, wenn du angemeldet bist, in deinem Konto für deine anderen Geräte. Im kostenlosen Tarif darf Google Anfragen zur Verbesserung seiner Dienste auswerten. Lade also keine privaten Daten hoch.</p>
+      <div class="sheet-actions">${key ? '<button class="btn danger" id="ai-key-del" type="button">Schlüssel löschen</button>' : '<span></span>'}<button class="btn primary" id="ai-key-save" type="button">Speichern</button></div>`}
+      ${(claude || key) ? '<button class="btn" id="ai-back" type="button">Zurück zum Chat</button>' : ''}
+    </div>`;
+    const save = $('#ai-key-save'), del = $('#ai-key-del'), back = $('#ai-back');
+    if (save) save.addEventListener('click', async () => {
+      const v = $('#ai-key').value.trim();
+      if (!/^[A-Za-z0-9_\-]{20,}$/.test(v)) { toast('Das sieht nicht nach einem Gemini-Schlüssel aus. Er beginnt meist mit „AIza“.'); return; }
+      pref.set('geminiKey', v);
+      try { if (SB && Sync.user) await SB.auth.updateUser({ data: { gemini_key: v } }); } catch {}
+      AI.setup = false; toast('Schlüssel gespeichert'); renderAi();
+    });
+    if (del) del.addEventListener('click', async () => {
+      pref.set('geminiKey', '');
+      try { if (SB && Sync.user) await SB.auth.updateUser({ data: { gemini_key: null } }); } catch {}
+      toast('Schlüssel gelöscht'); renderAi();
+    });
+    if (back) back.addEventListener('click', () => { AI.setup = false; renderAi(); });
+    return;
+  }
+  let html = '';
+  if (AI.ctx) html += `<div class="ai-ctx"><span>„${esc(AI.ctx)}“</span><button id="ai-ctx-x" aria-label="Markierung entfernen">×</button></div>`;
+  if (!AI.history.length) {
+    html += `<p class="ai-empty">${AI.ctx ? 'Was möchtest du zur markierten Stelle wissen?' : 'Markiere eine Stelle im Skript oder frag direkt etwas zur aktuellen Seite.'}</p>`;
+    html += `<div class="ai-quick">${(AI.ctx ? QUICK : QUICK_PAGE).map(([l, q]) => `<button data-q="${esc(q)}">${l}</button>`).join('')}</div>`;
+  }
+  for (const m of AI.history) html += m.role === 'user' ? `<div class="msg me">${esc(m.text)}</div>` : `<div class="msg ai${m.err ? ' err' : ''}">${m.text ? mdLite(m.text) : '<span class="dots">Denkt nach</span>'}</div>`;
+  if (AI.history.length && !AI.busy) html += `<div class="ai-quick">${(AI.ctx ? QUICK : QUICK_PAGE).slice(0, 3).map(([l, q]) => `<button data-q="${esc(q)}">${l}</button>`).join('')}</div>`;
+  aiBody.innerHTML = html;
+  const x = $('#ai-ctx-x');
+  if (x) x.addEventListener('click', () => { AI.ctx = ''; renderAi(); });
+  aiBody.scrollTop = aiBody.scrollHeight;
+}
+aiBody.addEventListener('click', e => { const b = e.target.closest('button[data-q]'); if (b) askAi(b.dataset.q); });
+$('#ai-form').addEventListener('submit', e => { e.preventDefault(); const v = $('#ai-in').value.trim(); if (v) { $('#ai-in').value = ''; askAi(v); } });
+$('#ai-in').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); $('#ai-form').requestSubmit(); } });
+$('#ai-in').addEventListener('input', e => { e.target.style.height = 'auto'; e.target.style.height = Math.min(120, e.target.scrollHeight) + 'px'; });
+
+const AI_SYSTEM = 'Du bist eine geduldige Lernhilfe für eine Studentin, die mit ihrem Vorlesungsskript für eine Klausur lernt. ' +
+  'Antworte immer auf Deutsch, klar, freundlich und knapp (meist unter 200 Wörtern, außer es wird mehr verlangt). ' +
+  'Nutze einfache Sprache, kurze Absätze, Aufzählungen und konkrete Beispiele. Schreibe Formeln in normaler Textschreibweise. ' +
+  'Stütze dich zuerst auf den mitgeschickten Skripttext. Wenn etwas nicht im Skript steht, sag das kurz und erkläre mit allgemeinem Fachwissen.';
+async function pageContext() {
+  const parts = [];
+  for (const n of [R.cur, R.cur + 1]) {
+    const p = R.pages[n - 1];
+    if (!p) continue;
+    try { const t = await ensureText(p); parts.push(`--- Seite ${n} ---\n${t.raw.slice(0, 5000)}`); } catch {}
+  }
+  return parts.join('\n\n').slice(0, 9000);
+}
+async function askAi(q) {
+  if (AI.busy) return;
+  AI.busy = true;
+  AI.history.push({ role: 'user', text: q });
+  const answer = { role: 'model', text: '' };
+  AI.history.push(answer);
+  await renderAi();
+  const ctx = `Skript: „${R.meta ? R.meta.title : ''}“, aktuell Seite ${R.cur} von ${R.pages.length}.\n\nText der aktuellen Seite(n):\n${await pageContext()}` +
+    (AI.ctx ? `\n\nMarkierte Stelle:\n„${AI.ctx}“` : '');
+  const turns = AI.history.slice(0, -1);
+  let lastPaint = 0;
+  const onText = t => {
+    answer.text = t;
+    if (Date.now() - lastPaint > 80) { lastPaint = Date.now(); const el = aiBody.querySelector('.msg.ai:last-of-type'); if (el) { el.innerHTML = mdLite(t); aiBody.scrollTop = aiBody.scrollHeight; } }
+  };
+  try {
+    const claude = await claudeSample();
+    if (claude) {
+      const msgs = turns.map((m, i) => ({ role: m.role === 'user' ? 'user' : 'assistant', content: i === 0 ? `${AI_SYSTEM}\n\n${ctx}\n\nFrage: ${m.text}` : m.text }));
+      const res = await claude(msgs, { onText: ({ text }) => onText(text), cache: false });
+      answer.text = res.text;
+    } else {
+      const contents = turns.map((m, i) => ({ role: m.role, parts: [{ text: i === 0 ? `${ctx}\n\nFrage: ${m.text}` : m.text }] }));
+      answer.text = await gemini(geminiKey(), contents, AI_SYSTEM, onText);
+    }
+    if (!answer.text) answer.text = 'Ich habe keine Antwort bekommen. Versuch es bitte noch einmal.';
+  } catch (e) {
+    console.error(e);
+    answer.err = true;
+    answer.text = (e && e.code === 'rate_limited') ? 'Gerade kommen zu viele Anfragen. Warte einen Moment und versuch es dann noch einmal.'
+      : (e && e.code === 'not_granted') ? 'Du hast der Seite nicht erlaubt, Claude zu fragen. Das kannst du im Menü der Seite unter „Berechtigungen“ ändern.'
+      : (e && e.message) || 'Die KI hat nicht geantwortet. Prüfe deine Internetverbindung.';
+    AI.history.splice(-2, 1);
+  } finally {
+    AI.busy = false;
+    renderAi();
+  }
+}
+async function gemini(key, contents, system, onText) {
+  for (const model of ['gemini-flash-latest', 'gemini-2.5-flash']) {
+    let res;
+    try {
+      res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?alt=sse&key=${encodeURIComponent(key)}`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ systemInstruction: { parts: [{ text: system }] }, contents, generationConfig: { temperature: 0.4 } })
+      });
+    } catch { throw new Error('Keine Verbindung zur KI. Prüfe deine Internetverbindung.'); }
+    if (res.status === 404) continue;
+    if (!res.ok) {
+      const j = await res.json().catch(() => null);
+      const msg = (j && j.error && j.error.message) || '';
+      if (res.status === 400 && /api key/i.test(msg)) throw new Error('Der Gemini-Schlüssel stimmt nicht. Prüfe ihn über das Zahnrad oben.');
+      if (res.status === 429) throw new Error('Das kostenlose Gemini-Limit ist gerade erreicht. Warte eine Minute und versuch es noch einmal.');
+      if (res.status === 403) throw new Error('Google lässt diesen Schlüssel nicht zu. Erstelle auf aistudio.google.com einen neuen und trag ihn über das Zahnrad ein.');
+      throw new Error('Die KI hat einen Fehler gemeldet' + (msg ? ': ' + msg : '.'));
+    }
+    const rd = res.body.getReader(), dec = new TextDecoder();
+    let buf = '', text = '';
+    for (;;) {
+      const { done, value } = await rd.read();
+      if (done) break;
+      buf += dec.decode(value, { stream: true });
+      let i;
+      while ((i = buf.indexOf('\n')) >= 0) {
+        const line = buf.slice(0, i).trim();
+        buf = buf.slice(i + 1);
+        if (!line.startsWith('data:')) continue;
+        try {
+          const j = JSON.parse(line.slice(5));
+          const t = ((j.candidates && j.candidates[0] && j.candidates[0].content && j.candidates[0].content.parts) || []).map(x => x.text || '').join('');
+          if (t) { text += t; onText(text); }
+        } catch {}
+      }
+    }
+    return text;
+  }
+  throw new Error('Kein passendes Gemini-Modell gefunden.');
+}
 
 /* ---------- Suche im Skript ---------- */
 function openSearch() {
@@ -1106,6 +2046,7 @@ function closeSearch() {
   R.search.token++; R.search.matches = []; R.search.idx = -1; R.search.q = ''; R.search.running = false;
   $('#r-q').value = '';
   R.pages.forEach(p => { p.hl.innerHTML = ''; });
+  flowClearMarks();
   updateSearchUI();
 }
 $('#r-search').addEventListener('click', () => ($('#searchbar').hidden ? openSearch() : closeSearch()));
@@ -1132,6 +2073,7 @@ $('#s-list').addEventListener('click', () => {
 async function ensureText(p) {
   if (p.text) return p.text;
   const tc = await p.page.getTextContent();
+  p.tc = tc;
   let raw = '';
   const map = [];
   for (const it of tc.items) {
@@ -1180,6 +2122,7 @@ async function runSearch(q) {
   const token = ++S.token;
   S.q = q; S.matches = []; S.idx = -1; S.scanned = 0;
   R.pages.forEach(p => { p.hl.innerHTML = ''; });
+  if (R.mode !== 'pdf') { S.running = false; flowSearch(q); return; }
   if (q.length < 2) { S.running = false; updateSearchUI(); renderResults(); return; }
   S.running = true; updateSearchUI();
   const ql = q.toLowerCase(), doc = R.doc;
@@ -1211,6 +2154,7 @@ async function runSearch(q) {
 function goMatch(i) {
   const S = R.search;
   if (!S.matches.length) return;
+  if (R.mode !== 'pdf') { flowGoMatch(i); return; }
   const prev = S.matches[S.idx];
   S.idx = (i + S.matches.length) % S.matches.length;
   const m = S.matches[S.idx];
@@ -1259,18 +2203,23 @@ document.addEventListener('keydown', e => {
   const typing = /^(INPUT|SELECT|TEXTAREA)$/.test(document.activeElement?.tagName || '');
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'f') { e.preventDefault(); openSearch(); return; }
   if (e.key === 'Escape') {
-    if (!$('#panel').hidden) $('#panel').hidden = true;
+    if (!$('#ai-panel').hidden) closeAi();
+    else if (!$('#viewpanel').hidden) closeOverlays();
+    else if (!$('#panel').hidden) $('#panel').hidden = true;
     else if (!$('#searchbar').hidden) closeSearch();
     else if (reader.classList.contains('immersive')) setImmersive(false);
     else closeReader();
     return;
   }
   if (typing || sheet.open) return;
-  if ((e.key === '+' || e.key === '=') && !R.locked) setZoom(R.zoom * 1.25);
-  else if (e.key === '-' && !R.locked) setZoom(R.zoom / 1.25);
-  else if (e.key === '0' && !R.locked) setZoom(1);
-  else if (e.key === 'ArrowRight') scrollToPage(R.cur + 1);
-  else if (e.key === 'ArrowLeft') scrollToPage(R.cur - 1);
+  const pdf = R.mode === 'pdf';
+  if ((e.key === '+' || e.key === '=') && pdf && !R.locked) setZoom(R.zoom * 1.25);
+  else if (e.key === '-' && pdf && !R.locked) setZoom(R.zoom / 1.25);
+  else if (e.key === '0' && pdf && !R.locked) setZoom(1);
+  else if ((e.key === '+' || e.key === '=') && !pdf) setFlowSize(flowSize + 1);
+  else if (e.key === '-' && !pdf) setFlowSize(flowSize - 1);
+  else if (e.key === 'ArrowRight' || (e.key === ' ' && R.mode === 'paged')) { e.preventDefault(); navStep(1); }
+  else if (e.key === 'ArrowLeft') navStep(-1);
   else if (e.key.toLowerCase() === 'f') setImmersive(!reader.classList.contains('immersive'));
 });
 
@@ -1573,6 +2522,8 @@ if (SB) {
     const changed = (u && u.id) !== (Sync.user && Sync.user.id);
     Sync.user = u;
     if (!u) Sync.state = 'off';
+    const gk = u && u.user_metadata && u.user_metadata.gemini_key;
+    if (gk && !pref.get('geminiKey', '')) pref.set('geminiKey', gk);
     renderAcct();
     if (u && changed) syncSoon(200);
   });
@@ -1592,6 +2543,8 @@ try {
   if (capApp) capApp.addListener('backButton', () => {
     if (sheet.open) sheet.close();
     else if (reader.hidden) capApp.exitApp();
+    else if (!$('#ai-panel').hidden) closeAi();
+    else if (!$('#viewpanel').hidden) closeOverlays();
     else if (!$('#panel').hidden) $('#panel').hidden = true;
     else if (!$('#searchbar').hidden) closeSearch();
     else if (reader.classList.contains('immersive')) setImmersive(false);
