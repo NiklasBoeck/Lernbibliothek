@@ -135,6 +135,9 @@ select.sort { border: 1px solid var(--line); background: var(--surface); border-
 .reader { position: fixed; inset: 0; z-index: 20; background: var(--vb, var(--vb-light)); --doc-bg: #ffffff; --doc-fg: #1b1b1b; }
 .viewer { position: absolute; inset: 0; overflow: auto; overscroll-behavior: contain; touch-action: pan-x pan-y; -webkit-overflow-scrolling: touch; }
 .viewer.locked { overflow-x: hidden; touch-action: pan-y; }
+/* Fixiert: kein seitlicher Scrollbereich mehr, die Seite wird nur verschoben und abgeschnitten */
+.viewer.locked .pages { width: 100%; min-width: 0; overflow: hidden; overflow: clip; }
+.viewer.locked .page { transform: translateX(var(--lockx, 0px)); }
 .pages { display: flex; flex-direction: column; align-items: center; gap: 12px; width: max-content; min-width: 100%; padding-top: calc(env(safe-area-inset-top, 0px) + 72px); padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 120px); transform-origin: 0 0; }
 .page { position: relative; background: var(--doc-bg); margin: 0 max(8px, env(safe-area-inset-right, 0px)) 0 max(8px, env(safe-area-inset-left, 0px)); box-shadow: 0 1px 3px rgba(0,0,0,.18); flex: none; }
 .page canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
@@ -411,11 +414,11 @@ dialog.sheet::backdrop { background: rgba(10, 14, 18, .45); }
   <div class="results" id="results" hidden></div>
   <div class="zpop" id="zpop" hidden role="dialog" aria-label="Größe">
     <div class="zp-presets" id="zp-presets">
-      <button class="wide" data-z="page">Ganze Seite</button><button class="wide" data-z="1">Seitenbreite</button>
-      <button data-z="0.5">50 %</button><button data-z="0.75">75 %</button><button data-z="1.25">125 %</button><button data-z="1.5">150 %</button>
+      <button class="wide" data-z="page">Ganze Seite</button><button class="wide" data-z="width">Bildschirmbreite</button>
+      <button data-z="0.75">75 %</button><button data-z="1">100 %</button><button data-z="1.25">125 %</button><button data-z="1.5">150 %</button>
       <button data-z="2">200 %</button><button data-z="2.5">250 %</button><button data-z="3">300 %</button><button data-z="4">400 %</button>
     </div>
-    <div class="zp-row"><input type="range" id="zp-range" min="50" max="400" step="5" aria-label="Größe frei einstellen"><output id="zp-val"></output></div>
+    <div class="zp-row"><input type="range" id="zp-range" min="20" max="400" step="5" aria-label="Größe frei einstellen"><output id="zp-val"></output></div>
   </div>
   <footer class="bar bottom" id="bottombar">
     <div class="bar-row">
@@ -823,7 +826,7 @@ sheet.addEventListener('click', e => { if (e.target === sheet) sheet.close(); })
 
 /* ---------- Leser ---------- */
 const reader = $('#reader'), viewer = $('#viewer'), pagesEl = $('#pages');
-const ZMIN = 0.5, ZMAX = 6, MAXPX = 14e6;
+const ZMIN = 0.2, ZMAX = 6, MAXPX = 14e6;
 const R = { doc: null, meta: null, pages: [], zoom: 1, fit: 1, maxW1: 1, locked: false, cur: 1, gen: 0, busy: 0, io: null, outline: null, toc: null, tab: 'toc', wake: null,
   mode: 'pdf', flow: null, pg: 0, pgTotal: 1,
   search: { q: '', matches: [], idx: -1, token: 0, running: false, scanned: 0 } };
@@ -961,7 +964,6 @@ function restoreAnchor(a, pt) {
   const el = R.pages[a.i].el;
   if (!R.locked || viewer.scrollWidth > viewer.clientWidth) viewer.scrollLeft = el.offsetLeft + a.fx * el.offsetWidth - pt.x;
   viewer.scrollTop = el.offsetTop + a.fy * el.offsetHeight - pt.y;
-  R.lockLeft = viewer.scrollLeft;
 }
 function setZoom(z, pt, anchor) {
   if (!R.doc) return;
@@ -983,10 +985,12 @@ function updateZoomUI() {
   if (!$('#zpop').hidden) syncZoomPop();
 }
 /* Größe: Standardgrößen antippen oder frei verschieben */
+const widthZoom = () => viewer.clientWidth / (R.maxW1 * R.fit);
 const pageZoom = () => { const p = R.pages[R.cur - 1] || R.pages[0]; return (viewer.clientHeight - 24) / (p.h1 * R.fit); };
 function syncZoomPop() {
   const pz = R.pages.length ? pageZoom() : 0;
-  $$('#zp-presets button').forEach(b => { const z = b.dataset.z === 'page' ? pz : +b.dataset.z; b.setAttribute('aria-pressed', String(Math.abs(z - R.zoom) < 0.01)); });
+  const wz = R.pages.length ? widthZoom() : 0;
+  $$('#zp-presets button').forEach(b => { const z = b.dataset.z === 'page' ? pz : b.dataset.z === 'width' ? wz : +b.dataset.z; b.setAttribute('aria-pressed', String(Math.abs(z - R.zoom) < 0.01)); });
   if (document.activeElement !== $('#zp-range')) $('#zp-range').value = Math.round(R.zoom * 100);
   $('#zp-val').textContent = Math.round(R.zoom * 100) + ' %';
 }
@@ -1001,7 +1005,12 @@ function toggleZoomPop() {
 $('#zp-presets').addEventListener('click', e => {
   const b = e.target.closest('button[data-z]');
   if (!b || R.locked) return;
-  if (b.dataset.z === 'page') { setZoom(pageZoom()); scrollToPage(R.cur); }
+  if (b.dataset.z === 'page') {
+    setZoom(pageZoom());
+    const el = curPageEl();
+    viewer.scrollTop = el.offsetTop - (viewer.clientHeight - el.offsetHeight) / 2;
+  }
+  else if (b.dataset.z === 'width') { setZoom(widthZoom()); viewer.scrollLeft = (viewer.scrollWidth - viewer.clientWidth) / 2; }
   else setZoom(+b.dataset.z);
 });
 let zpRaf = 0;
@@ -1011,9 +1020,34 @@ $('#zp-range').addEventListener('input', e => {
   cancelAnimationFrame(zpRaf);
   zpRaf = requestAnimationFrame(() => setZoom(v));
 });
-function applyLock() {
-  viewer.classList.toggle('locked', R.locked);
-  R.lockLeft = viewer.scrollLeft;
+// Fixieren: aktuelle Ansicht einfrieren. Es gibt dann keinen seitlichen Scrollbereich mehr,
+// die Seite steht über --lockx fest und wackelt beim Runterscrollen nicht.
+const curPageEl = () => (R.pages[R.cur - 1] || R.pages[0]).el;
+function clampLock(x) {
+  const w = curPageEl().offsetWidth, vw = viewer.clientWidth;
+  const m = Math.max(0, (w - vw) / 2);
+  return clamp(x, -m, m);
+}
+function setLockX(x) { R.lockx = clampLock(x); pagesEl.style.setProperty('--lockx', R.lockx + 'px'); }
+function applyLock(fromUser) {
+  const wasLocked = viewer.classList.contains('locked');
+  if (!R.pages.length) { viewer.classList.toggle('locked', R.locked); return; }
+  const left0 = curPageEl().getBoundingClientRect().left;
+  if (!fromUser) {
+    // Beim Öffnen eines Skripts: gespeicherten Zustand übernehmen
+    viewer.classList.toggle('locked', R.locked);
+    if (R.locked) { viewer.scrollLeft = 0; setLockX((R.meta && R.meta.lockx) || 0); }
+    else pagesEl.style.setProperty('--lockx', '0px');
+  } else if (R.locked && !wasLocked) {
+    pagesEl.style.setProperty('--lockx', '0px');
+    viewer.classList.add('locked');
+    viewer.scrollLeft = 0;
+    setLockX(left0 - curPageEl().getBoundingClientRect().left);
+  } else if (!R.locked && wasLocked) {
+    viewer.classList.remove('locked');
+    pagesEl.style.setProperty('--lockx', '0px');
+    viewer.scrollLeft += curPageEl().getBoundingClientRect().left - left0;
+  }
   const b = $('#z-lock');
   b.innerHTML = R.locked ? IC.lock : IC.unlock;
   b.setAttribute('aria-pressed', String(R.locked));
@@ -1111,8 +1145,6 @@ async function renderPage(p) {
 /* Scrollen */
 let scrollRaf = 0;
 viewer.addEventListener('scroll', () => {
-  // Fixiert: seitlich nichts verrutschen lassen (iOS scrollt sonst z. B. beim Antippen von Text nach)
-  if (R.locked && Math.abs(viewer.scrollLeft - (R.lockLeft || 0)) > 0.5) viewer.scrollLeft = R.lockLeft || 0;
   if (scrollRaf) return;
   scrollRaf = requestAnimationFrame(() => { scrollRaf = 0; updateCur(); pump(); });
 }, { passive: true });
@@ -1120,7 +1152,9 @@ new ResizeObserver(() => {
   if (!R.doc) return;
   const pt = { x: viewer.clientWidth / 2, y: viewer.clientHeight * 0.35 };
   const a = anchorAt(pt);
-  computeFit(); layout(); restoreAnchor(a, pt); pump();
+  computeFit(); layout(); restoreAnchor(a, pt);
+  if (R.locked) setLockX(R.lockx || 0);
+  pump();
 }).observe(viewer);
 
 /* Zoom-Gesten */
@@ -1227,8 +1261,8 @@ $('#z-in').addEventListener('click', () => setZoom(R.zoom * 1.25));
 $('#z-out').addEventListener('click', () => setZoom(R.zoom / 1.25));
 $('#z-fit').addEventListener('click', toggleZoomPop);
 $('#z-lock').addEventListener('click', () => {
-  R.locked = !R.locked; applyLock();
-  if (R.meta) { R.meta.locked = R.locked; saveMeta(R.meta); }
+  R.locked = !R.locked; applyLock(true);
+  if (R.meta) { R.meta.locked = R.locked; R.meta.lockx = R.lockx || 0; saveMeta(R.meta); }
   toast(R.locked ? 'Seite fixiert: kein Zoomen, kein seitliches Verrutschen' : 'Fixierung gelöst');
 });
 $('#p-prev').addEventListener('click', () => navStep(-1));
