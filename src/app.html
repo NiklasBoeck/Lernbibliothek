@@ -299,7 +299,8 @@ select.sort { border: 1px solid var(--line); background: var(--surface); border-
 .panel { position: absolute; z-index: 7; top: 0; bottom: 0; right: 0; width: min(360px, 88%); background: var(--surface); border-left: 1px solid var(--line); box-shadow: var(--shadow); display: flex; flex-direction: column; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); padding-right: env(safe-area-inset-right, 0px); }
 .panel-head { display: flex; align-items: center; gap: 6px; padding: 8px 8px 8px 14px; border-bottom: 1px solid var(--line); }
 .tabs { display: flex; gap: 4px; flex: 1; }
-.tab { border: 0; background: transparent; padding: 8px 12px; border-radius: 8px; font-weight: 700; color: var(--muted); }
+.tab { border: 0; background: transparent; padding: 8px 9px; border-radius: 8px; font-weight: 700; font-size: 14px; color: var(--muted); }
+.study .note { color: var(--muted); text-align: center; }
 .tab[aria-selected="true"] { background: var(--accent-soft); color: var(--accent); }
 .panel-body { overflow: auto; flex: 1; padding: 6px 0; }
 .panel-body .row { display: flex; align-items: center; width: 100%; gap: 8px; border: 0; background: transparent; text-align: left; padding: 9px 14px; }
@@ -311,6 +312,70 @@ select.sort { border: 1px solid var(--line); background: var(--surface); border-
 .panel-body .addbm { margin: 8px 14px 6px; }
 
 .loading { position: absolute; inset: 0; z-index: 8; display: grid; place-items: center; color: var(--muted); font-weight: 700; background: inherit; }
+
+/* ---------- Lernen ---------- */
+.hlmarks { position: absolute; inset: 0; pointer-events: none; z-index: 2; mix-blend-mode: multiply; }
+.reader:is([data-doc="night"], [data-doc="dark"], [data-doc="black"]) .hlmarks { mix-blend-mode: screen; }
+.hlmarks i { position: absolute; background: var(--mc); opacity: .42; border-radius: 2px; }
+.hlmarks i b { position: absolute; left: -7px; top: -7px; width: 12px; height: 12px; border-radius: 50%; background: var(--mc); border: 2px solid #fff; opacity: 1; }
+.ai-acts { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.mc { width: 28px; height: 28px; border-radius: 50%; border: 2px solid transparent; background: var(--mc); box-shadow: inset 0 0 0 1px rgba(0,0,0,.12); padding: 0; flex: none; }
+.mc[aria-pressed="true"] { border-color: var(--ink); }
+.ai-acts .lnk, .chipbtn { border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 5px 11px; font-size: 13px; }
+.mk-q { margin: 0; padding: 10px 12px; border-left: 4px solid var(--mc); background: var(--paper); border-radius: 8px; font-size: 14px; max-height: 160px; overflow: auto; }
+.mk-cols { display: flex; gap: 10px; }
+dialog.sheet textarea, dialog.sheet input[type="date"] { width: 100%; border: 1px solid var(--line); border-radius: 10px; background: var(--paper); color: var(--ink); padding: 9px 12px; font: inherit; }
+.sheet-actions.three { display: flex; gap: 8px; flex-wrap: wrap; }
+.panel-body .mrow { display: flex; gap: 10px; width: 100%; border: 0; background: transparent; text-align: left; padding: 10px 14px; }
+.panel-body .mrow:hover { background: var(--accent-soft); }
+.panel-body .mrow .bar { width: 4px; border-radius: 2px; background: var(--mc); flex: none; }
+.panel-body .mrow .t { flex: 1; min-width: 0; font-size: 14px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.panel-body .mrow .nt { display: block; color: var(--muted); font-size: 13px; margin-top: 3px; }
+.panel-body .mrow .n { color: var(--muted); font-size: 13px; flex: none; }
+.panel-body .ptools { display: flex; flex-wrap: wrap; gap: 8px; padding: 8px 14px 10px; border-bottom: 1px solid var(--line); margin-bottom: 4px; }
+.panel-body .ptools .btn { flex: 1 1 auto; justify-content: center; }
+.panel-body .phint { padding: 0 14px 8px; color: var(--muted); font-size: 13px; }
+.tocrow { display: flex; align-items: center; }
+.tocrow .row { flex: 1; min-width: 0; }
+.chk { width: 24px; height: 24px; border-radius: 7px; border: 2px solid var(--line); background: transparent; display: grid; place-items: center; flex: none; margin-left: 10px; padding: 0; }
+.chk svg.i { width: 14px; height: 14px; stroke-width: 3; stroke: #fff; opacity: 0; }
+.chk[aria-checked="true"] { background: var(--ready); border-color: var(--ready); }
+.chk[aria-checked="true"] svg.i { opacity: 1; }
+.tocrow.learned .row .t { color: var(--muted); }
+.cover .prog.learn { bottom: 4px; background: transparent; }
+.cover .prog.learn i { background: var(--ready); }
+.card-exam { font-size: 12px; font-weight: 700; color: var(--accent); margin-top: 2px; }
+.card-exam.soon { color: #c0392b; }
+.study { position: fixed; inset: 0; z-index: 40; background: var(--paper); color: var(--ink); display: flex; flex-direction: column; padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px); }
+.study-head { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-bottom: 1px solid var(--line); }
+.study-head h2 { flex: 1; margin: 0; font-family: var(--font-display); font-size: 18px; }
+.study-head .cnt { color: var(--muted); font-size: 14px; font-variant-numeric: tabular-nums; }
+.study-body { flex: 1; overflow: auto; display: flex; flex-direction: column; align-items: center; padding: 20px 16px 28px; gap: 16px; }
+.fc { width: min(640px, 100%); min-height: 240px; background: var(--surface); border: 1px solid var(--line); border-radius: 20px; box-shadow: var(--shadow); padding: 24px 22px; display: flex; flex-direction: column; gap: 14px; justify-content: center; text-align: center; font-size: 19px; line-height: 1.45; cursor: pointer; }
+.fc .side { font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.fc .back { border-top: 1px dashed var(--line); padding-top: 14px; font-size: 17px; }
+.fc .src { font-size: 13px; color: var(--muted); }
+.grades { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; width: min(640px, 100%); }
+.grades button { border: 0; border-radius: 14px; padding: 10px 4px; font-weight: 700; color: #fff; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.grades button small { font-weight: 400; opacity: .9; font-size: 12px; }
+.grades .g0 { background: #c0392b; } .grades .g1 { background: #d68910; } .grades .g2 { background: #1e8449; } .grades .g3 { background: #1f5f7a; }
+.study .bigbtn { width: min(640px, 100%); }
+.quiz-q { width: min(640px, 100%); font-size: 19px; font-weight: 700; line-height: 1.4; }
+.quiz-opts { width: min(640px, 100%); display: flex; flex-direction: column; gap: 8px; }
+.quiz-opts button { text-align: left; border: 1.5px solid var(--line); background: var(--surface); border-radius: 14px; padding: 12px 14px; font-size: 16px; }
+.quiz-opts button.right { border-color: #1e8449; background: rgba(30,132,73,.12); }
+.quiz-opts button.wrong { border-color: #c0392b; background: rgba(192,57,43,.1); }
+.quiz-ex { width: min(640px, 100%); background: var(--surface); border-radius: 14px; padding: 12px 14px; border: 1px solid var(--line); font-size: 15px; }
+.quiz-sum { width: min(640px, 100%); text-align: center; }
+.quiz-sum .big { font-size: 44px; font-weight: 800; font-family: var(--font-display); }
+.quiz-wrong { width: min(640px, 100%); display: flex; flex-direction: column; gap: 8px; }
+.quiz-wrong div { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; font-size: 14px; }
+.ttsbar { position: absolute; z-index: 7; left: 50%; transform: translateX(-50%); bottom: calc(env(safe-area-inset-bottom, 0px) + 100px); background: var(--surface); border: 1px solid var(--line); border-radius: 999px; box-shadow: 0 10px 30px rgba(0,0,0,.22); display: flex; align-items: center; gap: 2px; padding: 4px 8px; max-width: calc(100% - 16px); transition: bottom .28s ease; }
+.reader.immersive .ttsbar { bottom: calc(env(safe-area-inset-bottom, 0px) + 14px); }
+.ttsbar .ib { width: 40px; height: 40px; }
+.ttsbar .tb { border: 0; background: transparent; font-weight: 700; font-size: 13px; padding: 6px 8px; border-radius: 10px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.ttsbar .tb:hover { background: var(--accent-soft); }
+.ttsbar .who { font-size: 12px; color: var(--muted); max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 0 4px; }
 
 /* ---------- Dialog, Toast, Drop ---------- */
 dialog.sheet { border: 0; padding: 0; border-radius: 18px; background: var(--surface); color: var(--ink); width: min(440px, calc(100% - 24px)); box-shadow: 0 20px 60px rgba(0,0,0,.35); }
@@ -376,6 +441,7 @@ dialog.sheet::backdrop { background: rgba(10, 14, 18, .45); }
       <option value="added">Zuletzt hinzugefügt</option>
       <option value="title">Titel A–Z</option>
       <option value="status">Nach Status</option>
+      <option value="exam">Nach Klausurdatum</option>
     </select>
   </div>
 
@@ -398,6 +464,7 @@ dialog.sheet::backdrop { background: rgba(10, 14, 18, .45); }
       <button class="ib" id="r-search" aria-label="Im Skript suchen" title="Im Skript suchen (Strg+F)"><svg class="i" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></button>
       <button class="ib" id="r-bm" aria-label="Lesezeichen für diese Seite" title="Lesezeichen für diese Seite"><svg class="i" viewBox="0 0 24 24"><path d="M6 3h12v18l-6-4.5L6 21z"/></svg></button>
       <button class="ib" id="r-panel" aria-label="Inhalt und Lesezeichen" title="Inhalt und Lesezeichen"><svg class="i" viewBox="0 0 24 24"><path d="M9 6h12M9 12h12M9 18h12M4 6h.01M4 12h.01M4 18h.01"/></svg></button>
+      <button class="ib" id="r-tts" aria-label="Vorlesen" title="Vorlesen"><svg class="i" viewBox="0 0 24 24"><path d="M11 5L6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></svg></button>
       <button class="ib aa" id="r-view" aria-label="Darstellung: Ansicht, Farbe, Schrift" title="Darstellung" aria-expanded="false">Aa</button>
       <button class="ib" id="r-hide" aria-label="Nur das Skript zeigen" title="Nur das Skript zeigen"><svg class="i" viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
     </div>
@@ -448,7 +515,9 @@ dialog.sheet::backdrop { background: rgba(10, 14, 18, .45); }
     <div class="panel-head">
       <div class="tabs" role="tablist">
         <button class="tab" role="tab" data-tab="toc" aria-selected="true">Inhalt</button>
-        <button class="tab" role="tab" data-tab="bm" aria-selected="false">Lesezeichen</button>
+        <button class="tab" role="tab" data-tab="bm" aria-selected="false">Merken</button>
+        <button class="tab" role="tab" data-tab="marks" aria-selected="false">Markiert</button>
+        <button class="tab" role="tab" data-tab="cards" aria-selected="false">Karten</button>
       </div>
       <button class="ib" id="panel-close" aria-label="Schließen"><svg class="i" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
     </div>
@@ -478,8 +547,17 @@ dialog.sheet::backdrop { background: rgba(10, 14, 18, .45); }
     <div class="ai-body" id="ai-body"></div>
     <form class="ai-form" id="ai-form"><textarea id="ai-in" rows="1" placeholder="Frag etwas zum Skript…" aria-label="Frage an die KI"></textarea><button type="submit" aria-label="Senden"><svg class="i" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button></form>
   </div>
+  <div class="ttsbar" id="ttsbar" hidden role="group" aria-label="Vorlesen">
+    <button class="ib" id="tts-prev" aria-label="Zurück"><svg class="i" viewBox="0 0 24 24"><path d="M19 6l-8 6 8 6zM6 6v12"/></svg></button>
+    <button class="ib" id="tts-play" aria-label="Pause"></button>
+    <button class="ib" id="tts-next" aria-label="Weiter"><svg class="i" viewBox="0 0 24 24"><path d="M5 6l8 6-8 6zM18 6v12"/></svg></button>
+    <button class="tb" id="tts-rate" aria-label="Geschwindigkeit">1,0×</button>
+    <button class="tb who" id="tts-voice" aria-label="Stimme wechseln"></button>
+    <button class="ib" id="tts-stop" aria-label="Vorlesen beenden"><svg class="i" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+  </div>
   <div class="loading" id="loading" hidden>Skript wird geöffnet…</div>
 </section>
+<section class="study" id="study" hidden role="dialog" aria-label="Lernen"></section>
 
 <dialog class="sheet" id="sheet"></dialog>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -639,6 +717,7 @@ function renderLibrary() {
     .sort((a, b) => {
       if (sortBy === 'title') return a.title.localeCompare(b.title, 'de');
       if (sortBy === 'added') return b.added - a.added;
+      if (sortBy === 'exam') return (study(a).exam.v || '9999') .localeCompare(study(b).exam.v || '9999') || a.title.localeCompare(b.title, 'de');
       if (sortBy === 'status') return order[a.status || 'open'] - order[b.status || 'open'] || a.title.localeCompare(b.title, 'de');
       return (b.lastOpened || b.added) - (a.lastOpened || a.added);
     });
@@ -657,16 +736,19 @@ function cardHTML(m) {
   const pct = m.pages > 1 && m.lastOpened ? Math.round((m.lastPage - 1) / (m.pages - 1) * 100) : 0;
   const meta = m.lastOpened ? `Seite ${m.lastPage} von ${m.pages}` : `${m.pages} ${m.pages === 1 ? 'Seite' : 'Seiten'} · noch nicht geöffnet`;
   const cloud = m.hasFile === false ? '<span class="tag cloud">In der Cloud</span>' : '';
+  const ex = examInfo(m), due = dueCards(m).length, learn = chapterFrac(m);
+  const exam = ex ? (ex.days < 0 ? '' : `<div class="card-exam${ex.days <= 7 ? ' soon' : ''}">${ex.days === 0 ? 'Klausur heute' : ex.days === 1 ? 'Klausur morgen' : `Klausur in ${ex.days} Tagen`}${ex.days > 0 && ex.left ? ` · ${ex.perDay} S./Tag` : ''}${due ? ` · ${due} ${due === 1 ? 'Karte' : 'Karten'} fällig` : ''}</div>`)
+    : due ? `<div class="card-exam">${due} ${due === 1 ? 'Karte' : 'Karten'} fällig</div>` : '';
   const seal = s === 'ready' ? `<span class="seal ready" title="Bereit für die Klausur">${IC.check}</span>`
     : s === 'done' ? `<span class="seal done" title="Klausur geschrieben">${IC.dcheck}</span>` : '';
   return `<article class="card" data-id="${esc(m.id)}">
     <button class="cover" data-act="open" aria-label="${esc(m.title)} lesen">
       ${m.cover ? `<img src="${esc(coverURL(m))}" alt="" loading="lazy" draggable="false">` : ''}
       ${m.sample ? '<span class="tag">Beispiel</span>' : ''}${cloud}${seal}
-      <span class="prog"><i style="width:${pct}%"></i></span>
+      <span class="prog"><i style="width:${pct}%"></i></span>${learn ? `<span class="prog learn" title="Kapitel gelernt"><i style="width:${Math.round(learn * 100)}%"></i></span>` : ''}
     </button>
     <div class="card-body">
-      <div class="card-text"><div class="card-title" title="${esc(m.title)}">${esc(m.title)}</div><div class="card-meta">${meta}</div></div>
+      <div class="card-text"><div class="card-title" title="${esc(m.title)}">${esc(m.title)}</div><div class="card-meta">${meta}</div>${exam}</div>
       <button class="more" data-act="more" aria-label="Optionen für ${esc(m.title)}">${IC.more}</button>
     </div>
     <button class="status" data-act="status" data-s="${s}" title="Antippen zum Abhaken">
@@ -798,6 +880,8 @@ function openSheet(m) {
     <div><p class="lbl">Klausurstand</p><div class="opts" role="radiogroup">
       ${Object.keys(STATUS).map(k => `<button class="opt" role="radio" data-s="${k}" aria-checked="${k === s}" style="--c:${STATUS[k].c}"><span class="box">${IC.check}</span><span><strong>${STATUS[k].long}</strong><small>${STATUS[k].hint}</small></span></button>`).join('')}
     </div></div>
+    <div><p class="lbl">Klausurdatum</p><div class="renamer"><input type="date" id="ex-date" value="${esc(study(m).exam.v || '')}" aria-label="Klausurdatum"><button class="btn" id="ex-clear" type="button">Entfernen</button></div></div>
+    ${cardsOf(m).length ? `<button class="btn" id="sh-cards">Karteikarten lernen (${dueCards(m).length} fällig)</button>` : ''}
     <div><p class="lbl">Titel</p><form class="renamer" id="rn"><input id="rn-input" value="${esc(m.title)}" aria-label="Titel" maxlength="140"><button class="btn" type="submit">Speichern</button></form></div>
     <div class="sheet-actions"><button class="btn danger" id="del">Skript löschen</button><button class="btn primary" id="sh-open">Lesen</button></div>
     <div class="confirm" id="confirm" hidden><p>„${esc(m.title)}“ und alle Lesezeichen endgültig von diesem Gerät löschen?</p><div><button class="btn danger solid" id="del-yes">Endgültig löschen</button><button class="btn" id="del-no">Abbrechen</button></div></div>
@@ -820,6 +904,10 @@ function openSheet(m) {
     await removeItem(m); sheet.close(); renderLibrary(); toast(`„${m.title}“ gelöscht`);
   });
   $('#sh-open', sheet).addEventListener('click', () => { sheet.close(); openReader(m.id); });
+  const setExam = v => { study(m).exam = { v, at: Date.now() }; studyChanged(m); renderLibrary(); };
+  $('#ex-date', sheet).addEventListener('change', e => { setExam(e.target.value); toast(e.target.value ? 'Klausurdatum gespeichert' : 'Klausurdatum entfernt'); });
+  $('#ex-clear', sheet).addEventListener('click', () => { $('#ex-date', sheet).value = ''; setExam(''); toast('Klausurdatum entfernt'); });
+  const shc = $('#sh-cards', sheet); if (shc) shc.addEventListener('click', () => { sheet.close(); openReview(m); });
   try { sheet.showModal(); } catch { sheet.setAttribute('open', ''); }
 }
 sheet.addEventListener('click', e => { if (e.target === sheet) sheet.close(); });
@@ -894,7 +982,7 @@ async function openReader(id) {
     if (meta.pages !== doc.numPages) meta.pages = doc.numPages;
     const n = doc.numPages;
     $('#p-range').max = n; $('#p-num').max = n; $('#p-total').textContent = '/ ' + n;
-    computeFit(); layout(); applyLock(); updateZoomUI(); markBookmarks();
+    computeFit(); layout(); applyLock(); updateZoomUI(); markBookmarks(); paintMarks();
     R.io = new IntersectionObserver(onIntersect, { root: viewer, rootMargin: '150% 60%' });
     R.pages.forEach(p => R.io.observe(p.el));
     const start = clamp(meta.lastPage || 1, 1, n);
@@ -932,6 +1020,7 @@ function closeDoc() {
   updateSearchUI();
 }
 function closeReader() {
+  ttsStop();
   if (R.meta) { R.meta.lastPage = R.cur; saveMeta(R.meta); }
   closeDoc(); R.meta = null; R.gen++;
   reader.hidden = true; document.body.classList.remove('reading');
@@ -1227,6 +1316,8 @@ viewer.addEventListener('click', e => {
   if (hasSelection()) return;
   if (clearMark()) return;
   if (closeOverlays()) return;
+  const hitMark = markAt(e.clientX, e.clientY);
+  if (hitMark) { openMarkSheet(hitMark); return; }
   const now = Date.now();
   if (now - lastTap < 300) {
     clearTimeout(tapT); lastTap = 0;
@@ -1336,6 +1427,8 @@ async function loadOutline() {
 async function renderPanel() {
   $$('#panel .tab').forEach(t => t.setAttribute('aria-selected', String(t.dataset.tab === R.tab)));
   const body = $('#panel-body');
+  if (R.tab === 'marks') return renderMarksTab(body);
+  if (R.tab === 'cards') return renderCardsTab(body);
   if (R.tab === 'bm') {
     const b = R.meta.bookmarks;
     const has = b.includes(R.cur);
@@ -1347,13 +1440,28 @@ async function renderPanel() {
     body.innerHTML = '<p class="note">Inhaltsverzeichnis wird geladen…</p>';
     const toc = await loadToc();
     if (R.tab !== 'toc' || !R.doc) return;
-    body.innerHTML = toc.items.length
+    if (R.meta.chTotal !== toc.items.length) { R.meta.chTotal = toc.items.length; DB.put('meta', R.meta).catch(() => {}); }
+    const ch = study(R.meta).ch, done = toc.items.filter(o => ch[chKey(o)] && ch[chKey(o)].v).length;
+    const qc = quizChapter(toc);
+    const tools = `<div class="ptools"><button class="btn" id="quiz-go">${qc ? `Quiz: ${esc(qc.title.length > 34 ? qc.title.slice(0, 33) + '…' : qc.title)}` : 'Quiz zu dieser Seite'}</button></div>` +
+      (toc.items.length ? `<p class="phint">${done} von ${toc.items.length} Kapiteln gelernt</p>` : '');
+    body.innerHTML = tools + (toc.items.length
       ? (toc.src === 'auto' ? '<p class="src">Automatisch aus den Überschriften erkannt</p>' : '') +
-        toc.items.map(o => `<button class="row${o.n === R.cur ? ' cur' : ''}" data-n="${o.n || ''}" data-depth="${Math.min(o.depth, 3)}" style="padding-left:${14 + Math.min(o.depth, 4) * 14}px" ${o.n ? '' : 'disabled'}><span class="tocnum">${esc(o.num || '')}</span><span class="t">${esc(o.title)}</span><span class="n">${o.n ? 'S. ' + o.n : ''}</span></button>`).join('')
-      : '<p class="note">In diesem Skript wurden keine Kapitel gefunden. Nutze die Suche oder setze Lesezeichen.</p>';
+        toc.items.map(o => { const k = chKey(o), on = !!(ch[k] && ch[k].v); return `<div class="tocrow${on ? ' learned' : ''}"><button class="chk" role="checkbox" aria-checked="${on}" data-k="${esc(k)}" aria-label="${esc(o.title)} als gelernt markieren">${IC.check}</button><button class="row${o.n === R.cur ? ' cur' : ''}" data-n="${o.n || ''}" data-depth="${Math.min(o.depth, 3)}" style="padding-left:${8 + Math.min(o.depth, 4) * 14}px" ${o.n ? '' : 'disabled'}><span class="tocnum">${esc(o.num || '')}</span><span class="t">${esc(o.title)}</span><span class="n">${o.n ? 'S. ' + o.n : ''}</span></button></div>`; }).join('')
+      : '<p class="note">In diesem Skript wurden keine Kapitel gefunden. Nutze die Suche oder setze Lesezeichen.</p>');
+    $('#quiz-go').addEventListener('click', () => openQuiz(R.meta, qc));
   }
 }
 $('#panel-body').addEventListener('click', e => {
+  const c = e.target.closest('.chk');
+  if (c && R.meta) {
+    const on = c.getAttribute('aria-checked') !== 'true';
+    study(R.meta).ch[c.dataset.k] = { v: on, at: Date.now() };
+    studyChanged(R.meta);
+    if (on) toast('Kapitel als gelernt markiert');
+    renderPanel();
+    return;
+  }
   const r = e.target.closest('.row');
   if (!r || !r.dataset.n) return;
   gotoPage(+r.dataset.n);
@@ -1940,6 +2048,8 @@ function takeSelection() {
   if (!hasSelection() || !lastSel.text || reader.hidden) return;
   if (reader.classList.contains('immersive')) setImmersive(false);
   if (AI.ctx === lastSel.text && !aiPanel.hidden) return;
+  const sel = getSelection();
+  AI.selInfo = sel && sel.rangeCount ? (rangeRects(sel.getRangeAt(0)) || { n: R.cur, rects: [] }) : { n: R.cur, rects: [] };
   useMarked(lastSel.text, null);
   markRange();
 }
@@ -1962,7 +2072,7 @@ function markRange() {
 }
 function useMarked(text, img) {
   if (AI.img && AI.img !== img) URL.revokeObjectURL(AI.img.url);
-  AI.ctx = text || ''; AI.img = img;
+  AI.ctx = text || ''; AI.img = img; AI.markId = null;
   lastSel = { text: '', at: 0 };
   if (aiPanel.hidden) openAi();
   else { updateAiBadge(); if (!AI.busy) renderAi(); }
@@ -2024,6 +2134,7 @@ async function markImageAt(x, y) {
   const blob = await cropImage(p, r);
   if (!blob) { clearMark(); toast('Das Bild konnte nicht übernommen werden.'); return; }
   if (reader.classList.contains('immersive')) setImmersive(false);
+  AI.selInfo = { n: p.n, rects: [[r[0] / p.w1, r[1] / p.h1, (r[2] - r[0]) / p.w1, (r[3] - r[1]) / p.h1].map(v => +v.toFixed(4))] };
   useMarked('', { blob, url: URL.createObjectURL(blob), n: p.n });
 }
 async function cropImage(p, [x0, y0, x1, y1]) {
@@ -2139,6 +2250,11 @@ async function renderAi() {
   $('#ai-in').placeholder = marked ? 'Frag etwas dazu…' : 'Frag etwas zum Skript…';
   if (AI.img) html += `<div class="ai-ctx"><img src="${AI.img.url}" alt=""><span>Bild von Seite ${AI.img.n}</span><button id="ai-ctx-x" aria-label="Markierung entfernen">×</button></div>`;
   else if (AI.ctx) html += `<div class="ai-ctx"><span>„${esc(AI.ctx)}“</span><button id="ai-ctx-x" aria-label="Markierung entfernen">×</button></div>`;
+  if (marked && R.meta) {
+    const cur = AI.markId && study(R.meta).marks[AI.markId];
+    html += `<div class="ai-acts">${Object.keys(MCOL).map(c => `<button class="mc" data-mk="${c}" style="--mc:${MCOL[c]}" aria-pressed="${!!cur && !cur.del && cur.color === c}" aria-label="${MNAME[c]} markieren"></button>`).join('')}
+      <button class="lnk" data-act="note">Notiz</button><button class="lnk" data-act="card">Karteikarte</button></div>`;
+  }
   if (!AI.history.length) {
     html += `<div class="ai-quick">${(marked ? QUICK : QUICK_PAGE).map(([l, q]) => `<button data-q="${esc(q)}">${l}</button>`).join('')}</div>`;
   }
@@ -2149,7 +2265,17 @@ async function renderAi() {
   if (x) x.addEventListener('click', () => { if (AI.img) URL.revokeObjectURL(AI.img.url); AI.ctx = ''; AI.img = null; clearMark(); renderAi(); });
   aiBody.scrollTop = aiBody.scrollHeight;
 }
-aiBody.addEventListener('click', e => { const b = e.target.closest('button[data-q]'); if (b) askAi(b.dataset.q); });
+aiBody.addEventListener('click', e => {
+  const b = e.target.closest('button[data-q]'); if (b) return askAi(b.dataset.q);
+  const mk = e.target.closest('button[data-mk]');
+  if (mk) { const id = upsertMark(mk.dataset.mk); if (id) renderAi(); return; }
+  const a = e.target.closest('button[data-act]');
+  if (!a || !R.meta) return;
+  const id = upsertMark();
+  if (!id) return;
+  if (a.dataset.act === 'note') openMarkSheet(id, true);
+  else cardFromMark(R.meta, id);
+});
 $('#ai-form').addEventListener('submit', e => {
   e.preventDefault();
   const v = $('#ai-in').value.trim();
@@ -2663,7 +2789,7 @@ async function syncNow() {
     for (const id of tomb) {
       const { error } = await SB.from('scripts').upsert({ id, user_id: uidv, title: '', deleted: true, updated_at: Date.now() });
       if (error) throw error;
-      await SB.storage.from(BUCKET).remove([`${uidv}/${id}.pdf`, `${uidv}/${id}.jpg`]);
+      await SB.storage.from(BUCKET).remove([`${uidv}/${id}.pdf`, `${uidv}/${id}.jpg`, `${uidv}/${id}.study.json`]);
     }
     if (tomb.length) await DB.put('kv', [], 'tombstones');
     // 2. Stand aus der Cloud abgleichen: Neueres gewinnt
@@ -2692,6 +2818,7 @@ async function syncNow() {
       if (m.sample || remote.has(m.id)) continue;
       await uploadItem(m, uidv);
     }
+    await syncStudy(uidv);
     setSyncState('ok');
     prefetchFiles(uidv);
   } catch (e) {
@@ -2845,5 +2972,535 @@ async function init() {
   else if (!pdfOk) toast('Der PDF-Leser konnte nicht geladen werden. Prüfe die Internetverbindung und lade die Seite neu.', 6000);
 }
 init();
+/* ---------- Lernen: Markierungen, Notizen, Karteikarten, Kapitel, Klausur, Quiz ---------- */
+// Lerndaten liegen in m.study und werden als eigene Datei pro Skript synchronisiert
+// (Eintrag für Eintrag zusammengeführt, das Neuere gewinnt).
+const MCOL = { y: '#ffd43b', g: '#69db7c', b: '#74c0fc', p: '#f783ac' };
+const MNAME = { y: 'Gelb', g: 'Grün', b: 'Blau', p: 'Rosa' };
+const DAY = 864e5;
+function study(m) {
+  if (!m.study) m.study = {};
+  const s = m.study;
+  s.exam = s.exam || { v: '', at: 0 }; s.ch = s.ch || {}; s.marks = s.marks || {}; s.cards = s.cards || {};
+  return s;
+}
+async function studyChanged(m) {
+  m.studyDirty = true;
+  try { await DB.put('meta', m); } catch {}
+  if (!m.sample) syncSoon();
+}
+const live = o => Object.entries(o).filter(([, v]) => v && !v.del);
+const marksOf = m => live(study(m).marks).map(([id, v]) => Object.assign({ id }, v)).sort((a, b) => a.page - b.page || (a.y || 0) - (b.y || 0));
+const cardsOf = m => live(study(m).cards).map(([id, v]) => Object.assign({ id }, v));
+const dueCards = m => cardsOf(m).filter(c => (c.due || 0) <= Date.now());
+const chKey = o => `${o.num || ''}|${o.title}`.slice(0, 160);
+function chapterFrac(m) {
+  const done = live(study(m).ch).filter(([, v]) => v.v).length;
+  return m.chTotal && done ? Math.min(1, done / m.chTotal) : 0;
+}
+function examInfo(m) {
+  const v = study(m).exam.v;
+  if (!v || (m.status || 'open') === 'done') return null;
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const days = Math.round((new Date(v + 'T00:00:00') - today) / DAY);
+  // Noch zu lernen: nach abgehakten Kapiteln, sonst nach Lesefortschritt
+  const frac = chapterFrac(m) || (m.pages > 1 && m.lastOpened ? (m.lastPage - 1) / (m.pages - 1) : 0);
+  const left = Math.max(0, Math.round((m.pages || 0) * (1 - frac)));
+  return { days, left, perDay: days > 0 ? Math.ceil(left / days) : left };
+}
+function mergeStudy(a, b) {
+  a = study({ study: a }); b = study({ study: b || {} });
+  const out = { exam: (b.exam.at || 0) > (a.exam.at || 0) ? b.exam : a.exam, ch: {}, marks: {}, cards: {} };
+  for (const k of ['ch', 'marks', 'cards']) {
+    for (const id of new Set([...Object.keys(a[k]), ...Object.keys(b[k])])) {
+      const x = a[k][id], y = b[k][id];
+      out[k][id] = !x ? y : !y ? x : (y.at || 0) > (x.at || 0) ? y : x;
+    }
+  }
+  return out;
+}
+async function syncStudy(uidv) {
+  const st = SB.storage.from(BUCKET);
+  const remote = new Map();
+  try {
+    const { data, error } = await st.list(uidv, { limit: 1000, search: '.study.json' });
+    if (error) throw error;
+    for (const f of data || []) if (f.name.endsWith('.study.json')) remote.set(f.name.slice(0, -11), Date.parse(f.updated_at || f.created_at || '') || 1);
+  } catch (e) { console.warn('Lerndaten-Sync', e); return; }
+  let changed = false;
+  for (const m of [...items]) {
+    if (m.sample) continue;
+    const rt = remote.get(m.id) || 0;
+    let touched = false;
+    if (rt > (m.studyPulled || 0)) {
+      try {
+        const { data } = await st.download(`${uidv}/${m.id}.study.json`);
+        if (data) {
+          const before = JSON.stringify(study(m));
+          m.study = mergeStudy(study(m), JSON.parse(await data.text()));
+          if (JSON.stringify(m.study) !== before) changed = true;
+        }
+        m.studyPulled = rt; touched = true;
+      } catch (e) { console.warn('Lerndaten laden', e); }
+    }
+    if (m.studyDirty) {
+      const up = await st.upload(`${uidv}/${m.id}.study.json`, new Blob([JSON.stringify(m.study)], { type: 'application/json' }), { upsert: true, contentType: 'application/json' });
+      // Eigene Datei beim nächsten Mal einmal zurücklesen schadet nicht, verpasst aber nichts von anderen Geräten
+      if (!up.error) { m.studyDirty = false; m.studyPulled = Date.now() - 60e3; touched = true; }
+    }
+    if (touched) await DB.put('meta', m).catch(() => {});
+  }
+  if (changed) {
+    if (reader.hidden) renderLibrary();
+    else if (R.meta) { paintMarks(); if (!$('#panel').hidden) renderPanel(); }
+  }
+}
+
+/* Markierungen im Original-PDF */
+function rangeRects(range) {
+  const node = range.startContainer;
+  const el = node.nodeType === 1 ? node : node.parentElement;
+  const pageEl = el && el.closest && el.closest('.page');
+  if (!pageEl) return null;
+  const pr = pageEl.getBoundingClientRect();
+  const rs = [...range.getClientRects()].filter(r => r.width > 1 && r.height > 1 && r.top >= pr.top - 2 && r.bottom <= pr.bottom + 2 && r.width < pr.width * 0.98);
+  const lines = [];
+  for (const r of rs.sort((a, b) => a.top - b.top || a.left - b.left)) {
+    const L = lines.find(l => Math.abs(l.top - r.top) < r.height * 0.5 && r.left <= l.right + 8);
+    if (L) { L.left = Math.min(L.left, r.left); L.right = Math.max(L.right, r.right); L.bottom = Math.max(L.bottom, r.bottom); }
+    else lines.push({ top: r.top, bottom: r.bottom, left: r.left, right: r.right });
+  }
+  return { n: +pageEl.dataset.n, rects: lines.map(l => [(l.left - pr.left) / pr.width, (l.top - pr.top) / pr.height, (l.right - l.left) / pr.width, (l.bottom - l.top) / pr.height].map(v => +v.toFixed(4))) };
+}
+function paintMarks(n) {
+  const m = R.meta;
+  if (!m || !R.pages.length) return;
+  const list = marksOf(m);
+  for (const p of n ? [R.pages[n - 1]] : R.pages) {
+    if (!p) continue;
+    let layer = p.el.querySelector('.hlmarks');
+    const mine = list.filter(x => x.page === p.n && x.rects && x.rects.length);
+    if (!mine.length) { if (layer) layer.remove(); continue; }
+    if (!layer) { layer = document.createElement('div'); layer.className = 'hlmarks'; p.el.appendChild(layer); }
+    layer.innerHTML = mine.map(x => x.rects.map((r, i) => `<i style="left:${r[0] * 100}%;top:${r[1] * 100}%;width:${r[2] * 100}%;height:${r[3] * 100}%;--mc:${MCOL[x.color] || MCOL.y}">${i === 0 && x.note ? '<b></b>' : ''}</i>`).join('')).join('');
+  }
+}
+function markAt(x, y) {
+  const m = R.meta;
+  if (!m || R.mode !== 'pdf') return null;
+  const el = document.elementsFromPoint(x, y).find(n => n.classList && n.classList.contains('page'));
+  if (!el) return null;
+  const b = el.getBoundingClientRect(), px = (x - b.left) / b.width, py = (y - b.top) / b.height, n = +el.dataset.n;
+  const hit = marksOf(m).find(k => k.page === n && (k.rects || []).some(r => px >= r[0] - 0.005 && px <= r[0] + r[2] + 0.005 && py >= r[1] - 0.004 && py <= r[1] + r[3] + 0.004));
+  return hit ? hit.id : null;
+}
+// Aus der markierten Stelle in der KI eine Markierung machen (oder deren Farbe ändern)
+function upsertMark(color) {
+  const m = R.meta;
+  if (!m || !(AI.ctx || AI.img)) return null;
+  const s = study(m);
+  const cur = AI.markId && s.marks[AI.markId];
+  if (cur && !cur.del) {
+    if (color && cur.color !== color) { cur.color = color; cur.at = Date.now(); studyChanged(m); paintMarks(cur.page); }
+    return AI.markId;
+  }
+  const info = AI.selInfo || { n: R.cur, rects: [] };
+  const id = uid();
+  s.marks[id] = { page: info.n || R.cur, color: color || 'y', text: (AI.ctx || `Bild auf Seite ${AI.img.n}`).slice(0, 2000), note: '', rects: info.rects || [], y: info.rects && info.rects[0] ? info.rects[0][1] : 0, img: !!AI.img, at: Date.now() };
+  AI.markId = id;
+  studyChanged(m);
+  clearMark();
+  paintMarks(info.n);
+  if (!$('#panel').hidden && R.tab === 'marks') renderPanel();
+  return id;
+}
+function openMarkSheet(id, focusNote) {
+  const m = R.meta;
+  const x = m && study(m).marks[id];
+  if (!x || x.del) return;
+  sheet.innerHTML = `<div class="sheet-in">
+    <div class="sheet-head"><div><h2>Markierung</h2><p>Seite ${x.page}</p></div></div>
+    <blockquote class="mk-q" style="--mc:${MCOL[x.color] || MCOL.y}">${esc(x.text)}</blockquote>
+    <div class="mk-cols">${Object.keys(MCOL).map(c => `<button class="mc" data-c="${c}" style="--mc:${MCOL[c]}" aria-pressed="${c === x.color}" aria-label="${MNAME[c]}"></button>`).join('')}</div>
+    <div><p class="lbl">Notiz</p><textarea id="mk-note" rows="4" placeholder="Eigene Notiz zu dieser Stelle">${esc(x.note || '')}</textarea></div>
+    <div class="sheet-actions three"><button class="btn danger" id="mk-del">Löschen</button><button class="btn" id="mk-card">Karteikarte</button><button class="btn" id="mk-ai">KI fragen</button><button class="btn primary" id="mk-ok">Fertig</button></div>
+  </div>`;
+  const save = () => { x.at = Date.now(); studyChanged(m); paintMarks(x.page); if (!$('#panel').hidden && R.tab === 'marks') renderPanel(); };
+  sheet.querySelectorAll('.mc').forEach(b => b.addEventListener('click', () => {
+    x.color = b.dataset.c; save();
+    sheet.querySelectorAll('.mc').forEach(o => o.setAttribute('aria-pressed', String(o === b)));
+    $('.mk-q', sheet).style.setProperty('--mc', MCOL[x.color]);
+  }));
+  let nt = 0;
+  $('#mk-note', sheet).addEventListener('input', e => { x.note = e.target.value; clearTimeout(nt); nt = setTimeout(save, 400); });
+  $('#mk-del', sheet).addEventListener('click', () => { x.del = true; save(); if (AI.markId === id) { AI.markId = null; renderAi(); } sheet.close(); toast('Markierung gelöscht'); });
+  $('#mk-card', sheet).addEventListener('click', () => { clearTimeout(nt); save(); sheet.close(); cardFromMark(m, id); });
+  $('#mk-ai', sheet).addEventListener('click', () => { clearTimeout(nt); save(); sheet.close(); useMarked(x.text, null); AI.markId = id; AI.selInfo = { n: x.page, rects: x.rects }; renderAi(); });
+  $('#mk-ok', sheet).addEventListener('click', () => { clearTimeout(nt); save(); sheet.close(); });
+  try { sheet.showModal(); } catch { sheet.setAttribute('open', ''); }
+  if (focusNote) setTimeout(() => $('#mk-note', sheet).focus(), 60);
+}
+function renderMarksTab(body) {
+  const m = R.meta, list = marksOf(m);
+  body.innerHTML = list.length
+    ? list.map(x => `<button class="mrow" data-mid="${x.id}" style="--mc:${MCOL[x.color] || MCOL.y}"><span class="bar"></span><span class="t">${esc(x.text)}${x.note ? `<span class="nt">✎ ${esc(x.note)}</span>` : ''}</span><span class="n">S. ${x.page}</span></button>`).join('')
+    : '<p class="note">Noch keine Markierungen. Markiere Text im Skript und wähle im KI-Fenster eine Farbe.</p>';
+  body.querySelectorAll('.mrow').forEach(b => b.addEventListener('click', () => {
+    const x = study(m).marks[b.dataset.mid];
+    gotoPage(x.page);
+    if (reader.clientWidth < 700) $('#panel').hidden = true;
+    openMarkSheet(b.dataset.mid);
+  }));
+}
+
+/* Karteikarten (Wiederholung in wachsenden Abständen) */
+const parseJSON = t => { const x = String(t).replace(/```(?:json)?/g, ''); const j = x.match(/[\[{][\s\S]*[\]}]/); return JSON.parse(j ? j[0] : x); };
+async function aiText(prompt) {
+  const claude = await claudeSample();
+  if (claude) return (await claude(prompt, { cache: false })).text;
+  const key = geminiKey();
+  if (!key) { const e = new Error('Für diese Funktion braucht die KI einen Gemini-Schlüssel. Richte ihn im KI-Fenster über das Zahnrad ein.'); e.code = 'nokey'; throw e; }
+  return gemini(key, [{ role: 'user', parts: [{ text: prompt }] }], 'Du bist eine Lernhilfe für eine Studentin. Antworte auf Deutsch und nur mit gültigem JSON, ohne weiteren Text.', () => {}, true);
+}
+function addCard(m, front, back, page, markId) {
+  const id = uid();
+  study(m).cards[id] = { front: String(front).slice(0, 600), back: String(back).slice(0, 1500), page: page || 0, markId: markId || '', due: Date.now(), ivl: 0, ease: 2.5, reps: 0, at: Date.now() };
+  return id;
+}
+async function cardFromMark(m, id) {
+  const x = study(m).marks[id];
+  if (!x) return;
+  toast('Karteikarte wird erstellt…', 8000);
+  let front, back;
+  if (x.img) { front = `Was zeigt die Abbildung auf Seite ${x.page}?`; back = x.note || `Sieh dir die Abbildung im Skript auf Seite ${x.page} an.`; }
+  else {
+    try {
+      const j = parseJSON(await aiText(`Erstelle aus dieser Stelle eines Vorlesungsskripts genau eine Karteikarte zum Lernen für die Klausur. Vorderseite: eine klare Frage. Rückseite: die richtige Antwort, knapp (höchstens 3 Sätze) und nur aus dem Text.${x.note ? ` Notiz der Studentin dazu: ${x.note}` : ''}\nAntworte nur mit JSON: {"front": "...", "back": "..."}\n\nText (Seite ${x.page}):\n${x.text.slice(0, 3000)}`));
+      front = j.front; back = j.back;
+    } catch (e) {
+      if (e.code === 'nokey') toast(e.message, 5000);
+      front = `Was steht im Skript auf Seite ${x.page} hierzu?`; back = x.text;
+    }
+  }
+  if (!front || !back) { front = `Was steht im Skript auf Seite ${x.page} hierzu?`; back = x.text; }
+  addCard(m, front, back, x.page, id);
+  await studyChanged(m);
+  toast('Karteikarte gespeichert. Lernen kannst du sie unter „Karten“.', 3500);
+  if (!$('#panel').hidden && R.tab === 'cards') renderPanel();
+}
+async function pageText(n, max = 6000) {
+  const p = R.pages[n - 1];
+  if (!p) return '';
+  try { return (await ensureText(p)).raw.replace(/(\p{L})- (\p{Ll})/gu, '$1$2').replace(/\s+/g, ' ').trim().slice(0, max); } catch { return ''; }
+}
+async function cardsFromPage(m, btn) {
+  const n = R.cur, text = await pageText(n);
+  if (text.length < 80) { toast('Auf dieser Seite steht zu wenig Text für Karteikarten.'); return; }
+  btn.disabled = true; btn.textContent = 'KI erstellt Karten…';
+  try {
+    const arr = parseJSON(await aiText(`Erstelle 5 Karteikarten zum Lernen für die Klausur aus dieser Seite eines Vorlesungsskripts. Jede Karte: Vorderseite eine klare Frage, Rückseite die knappe richtige Antwort (höchstens 3 Sätze), nur aus dem Text. Wichtigste Inhalte zuerst.\nAntworte nur mit JSON: [{"front": "...", "back": "..."}]\n\nSeite ${n}:\n${text}`));
+    let c = 0;
+    for (const k of Array.isArray(arr) ? arr : []) if (k && k.front && k.back) { addCard(m, k.front, k.back, n); c++; }
+    if (!c) throw new Error('Die KI hat keine Karten geliefert. Versuch es noch einmal.');
+    await studyChanged(m);
+    toast(`${c} Karteikarten zu Seite ${n} gespeichert`);
+  } catch (e) { toast(e.message || 'Das hat nicht geklappt.', 5000); }
+  renderPanel();
+}
+function renderCardsTab(body) {
+  const m = R.meta, all = cardsOf(m), due = dueCards(m).length;
+  body.innerHTML = `<div class="ptools"><button class="btn primary" id="cd-learn" ${all.length ? '' : 'disabled'}>${due ? `${due} ${due === 1 ? 'Karte' : 'Karten'} lernen` : 'Alle Karten wiederholen'}</button><button class="btn" id="cd-page">Karten zu Seite ${R.cur} (KI)</button></div>` +
+    (all.length ? all.sort((a, b) => a.page - b.page).map(c => `<div class="mrow" style="--mc:${(c.due || 0) <= Date.now() ? 'var(--accent)' : 'var(--line)'}"><span class="bar"></span><span class="t">${esc(c.front)}<span class="nt">${esc(c.back)}</span></span><button class="ib" data-del="${c.id}" aria-label="Karte löschen"><svg class="i" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>`).join('')
+      : '<p class="note">Noch keine Karteikarten. Erstelle sie aus einer Markierung oder lass die KI Karten zur aktuellen Seite machen.</p>');
+  $('#cd-learn').addEventListener('click', () => openReview(m));
+  $('#cd-page').addEventListener('click', e => cardsFromPage(m, e.currentTarget));
+  body.querySelectorAll('[data-del]').forEach(b => b.addEventListener('click', () => {
+    const c = study(m).cards[b.dataset.del]; c.del = true; c.at = Date.now(); studyChanged(m); renderPanel();
+  }));
+}
+// Vereinfachtes SM-2: 0 nochmal, 1 schwer, 2 gut, 3 leicht
+function schedule(c, q) {
+  const ease = c.ease || 2.5, ivl = c.ivl || 0, reps = c.reps || 0;
+  const good = reps === 0 ? 1 : reps === 1 ? 3 : Math.round(Math.max(ivl, 1) * ease);
+  if (q === 0) return { ivl: 0, reps: 0, ease: Math.max(1.3, ease - 0.2), due: Date.now() + 10 * 60e3 };
+  if (q === 1) return { ivl: Math.max(1, Math.round(ivl * 1.2)), reps: reps + 1, ease: Math.max(1.3, ease - 0.15), due: Date.now() + Math.max(1, Math.round(ivl * 1.2)) * DAY };
+  if (q === 2) return { ivl: good, reps: reps + 1, ease, due: Date.now() + good * DAY };
+  const e = Math.max(good + 2, Math.round(good * 1.4));
+  return { ivl: e, reps: reps + 1, ease: ease + 0.15, due: Date.now() + e * DAY };
+}
+const ivlLabel = s => s.ivl === 0 ? '10 Min.' : s.ivl === 1 ? '1 Tag' : `${s.ivl} Tage`;
+const studyEl = $('#study');
+function closeStudy() { studyEl.hidden = true; studyEl.innerHTML = ''; if (!reader.hidden && R.meta && !$('#panel').hidden) renderPanel(); else if (reader.hidden) renderLibrary(); }
+function studyShell(title, cnt) {
+  return `<div class="study-head"><button class="ib" id="st-x" aria-label="Schließen"><svg class="i" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button><h2>${esc(title)}</h2><span class="cnt">${cnt || ''}</span></div><div class="study-body" id="st-body"></div>`;
+}
+function openReview(m) {
+  let queue = dueCards(m);
+  if (!queue.length) queue = cardsOf(m);
+  if (!queue.length) { toast('Für dieses Skript gibt es noch keine Karteikarten.'); return; }
+  queue = queue.sort(() => Math.random() - 0.5).map(c => c.id);
+  let done = 0, shown = false;
+  studyEl.hidden = false;
+  const draw = () => {
+    if (!queue.length) {
+      studyEl.innerHTML = studyShell('Karteikarten', '');
+      $('#st-body').innerHTML = `<div class="quiz-sum"><div class="big">Geschafft!</div><p>${done} ${done === 1 ? 'Karte' : 'Karten'} wiederholt. Die nächsten sind fällig, wenn es Zeit für die Wiederholung ist.</p></div><button class="btn primary bigbtn" id="st-done">Fertig</button>`;
+      $('#st-x').addEventListener('click', closeStudy); $('#st-done').addEventListener('click', closeStudy);
+      return;
+    }
+    const c = study(m).cards[queue[0]];
+    studyEl.innerHTML = studyShell(m.title, `noch ${queue.length}`);
+    $('#st-x').addEventListener('click', closeStudy);
+    const opts = [0, 1, 2, 3].map(q => schedule(c, q));
+    $('#st-body').innerHTML = `<div class="fc" id="st-card"><span class="side">Frage</span><div>${mdLite(c.front)}</div>${shown ? `<div class="back">${mdLite(c.back)}</div>${c.page ? `<span class="src">Skript, Seite ${c.page}</span>` : ''}` : ''}</div>` +
+      (shown ? `<div class="grades">${['Nochmal', 'Schwer', 'Gut', 'Leicht'].map((l, q) => `<button class="g${q}" data-q="${q}">${l}<small>${ivlLabel(opts[q])}</small></button>`).join('')}</div>`
+        : '<button class="btn primary bigbtn" id="st-show">Antwort zeigen</button>');
+    if (!shown) { $('#st-show').addEventListener('click', () => { shown = true; draw(); }); $('#st-card').addEventListener('click', () => { shown = true; draw(); }); }
+    else $$('.grades button', studyEl).forEach(b => b.addEventListener('click', () => {
+      const q = +b.dataset.q;
+      Object.assign(c, opts[q], { at: Date.now() });
+      studyChanged(m);
+      const id = queue.shift();
+      if (q === 0) queue.push(id); else done++;
+      shown = false; draw();
+    }));
+  };
+  draw();
+}
+
+/* Quiz pro Kapitel */
+function quizChapter(toc) {
+  const items = (toc && toc.items || []).filter(o => o.n);
+  if (!items.length) return null;
+  const top = Math.min(...items.map(o => o.depth));
+  const lvl = items.filter(o => o.depth === top);
+  let i = -1;
+  lvl.forEach((o, k) => { if (o.n <= R.cur) i = k; });
+  if (i < 0) return null;
+  const o = lvl[i], next = lvl[i + 1];
+  return { title: [o.num, o.title].filter(Boolean).join(' '), from: o.n, to: Math.max(o.n, (next ? next.n - 1 : R.pages.length)) };
+}
+async function openQuiz(m, chap) {
+  const from = chap ? chap.from : Math.max(1, R.cur - 1), to = chap ? Math.min(chap.to, from + 14) : Math.min(R.pages.length, R.cur + 1);
+  const title = chap ? chap.title : `Seiten ${from}–${to}`;
+  studyEl.hidden = false;
+  studyEl.innerHTML = studyShell(`Quiz: ${title}`, '');
+  $('#st-x').addEventListener('click', closeStudy);
+  $('#st-body').innerHTML = '<p class="note" style="margin-top:30vh">Die KI stellt dein Quiz zusammen…</p>';
+  let text = '';
+  for (let n = from; n <= to && text.length < 24000; n++) text += `--- Seite ${n} ---\n${await pageText(n, 4000)}\n`;
+  let qs;
+  try {
+    qs = parseJSON(await aiText(`Erstelle ein Quiz mit 5 Fragen zum folgenden Kapitel eines Vorlesungsskripts, so wie sie in einer Klausur vorkommen könnten. Jede Frage hat 4 Antwortmöglichkeiten, genau eine ist richtig. Die falschen sollen plausibel sein. Gib zu jeder Frage eine kurze Erklärung (1–2 Sätze) und die Seite, auf der die Antwort steht. Nur Inhalte aus dem Text.\nAntworte nur mit JSON: [{"q": "...", "a": ["...", "...", "...", "..."], "c": 0, "e": "...", "p": 12}]\n\nKapitel „${title}“:\n${text}`));
+    qs = (Array.isArray(qs) ? qs : []).filter(q => q && q.q && Array.isArray(q.a) && q.a.length >= 2 && Number.isInteger(+q.c) && +q.c < q.a.length);
+    if (!qs.length) throw new Error('Die KI hat kein Quiz geliefert. Versuch es noch einmal.');
+  } catch (e) {
+    if (studyEl.hidden) return;
+    $('#st-body').innerHTML = `<p class="note" style="margin-top:20vh">${esc(e.message || 'Das Quiz konnte nicht erstellt werden.')}</p><button class="btn bigbtn" id="st-done">Schließen</button>`;
+    $('#st-done').addEventListener('click', closeStudy);
+    return;
+  }
+  if (studyEl.hidden) return;
+  let i = 0, right = 0, picked = null;
+  const wrong = [];
+  const draw = () => {
+    $('.study-head .cnt', studyEl).textContent = i < qs.length ? `${i + 1} / ${qs.length}` : '';
+    const body = $('#st-body');
+    if (i >= qs.length) {
+      body.innerHTML = `<div class="quiz-sum"><div class="big">${right} / ${qs.length}</div><p>${right === qs.length ? 'Alles richtig, das sitzt!' : right >= qs.length * 0.6 ? 'Gut! Schau dir die falschen noch einmal an.' : 'Da geht noch was. Lies die Stellen noch einmal nach.'}</p></div>` +
+        (wrong.length ? `<div class="quiz-wrong">${wrong.map(q => `<div><strong>${esc(q.q)}</strong><br>Richtig: ${esc(q.a[q.c])}${q.p ? ` <span class="src">(S. ${q.p})</span>` : ''}</div>`).join('')}</div><button class="btn bigbtn" id="qz-cards">Falsche als Karteikarten speichern</button>` : '') +
+        `<button class="btn bigbtn" id="qz-again">Neues Quiz</button><button class="btn primary bigbtn" id="st-done">Fertig</button>`;
+      $('#st-done').addEventListener('click', closeStudy);
+      $('#qz-again').addEventListener('click', () => openQuiz(m, chap));
+      const qc = $('#qz-cards');
+      if (qc) qc.addEventListener('click', async () => {
+        wrong.forEach(q => addCard(m, q.q, `${q.a[q.c]}${q.e ? `\n\n${q.e}` : ''}`, +q.p || from));
+        await studyChanged(m); qc.disabled = true; qc.textContent = `${wrong.length} Karteikarten gespeichert`;
+      });
+      return;
+    }
+    const q = qs[i], c = +q.c;
+    body.innerHTML = `<div class="quiz-q">${esc(q.q)}</div><div class="quiz-opts">${q.a.map((a, k) => `<button data-k="${k}" class="${picked === null ? '' : k === c ? 'right' : k === picked ? 'wrong' : ''}" ${picked === null ? '' : 'disabled'}>${esc(a)}</button>`).join('')}</div>` +
+      (picked === null ? '' : `<div class="quiz-ex">${picked === c ? '<strong>Richtig.</strong> ' : '<strong>Leider falsch.</strong> '}${esc(q.e || '')}${q.p ? ` <span class="src">(Skript, S. ${esc(q.p)})</span>` : ''}</div><button class="btn primary bigbtn" id="qz-next">${i + 1 < qs.length ? 'Nächste Frage' : 'Ergebnis'}</button>`);
+    if (picked === null) $$('.quiz-opts button', body).forEach(b => b.addEventListener('click', () => {
+      picked = +b.dataset.k;
+      if (picked === c) right++; else wrong.push(q);
+      draw();
+    }));
+    else $('#qz-next').addEventListener('click', () => { i++; picked = null; draw(); });
+  };
+  draw();
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !studyEl.hidden) closeStudy(); });
+
+/* ---------- Vorlesen ---------- */
+// Mit Gemini-Schlüssel: natürliche KI-Stimme. Sonst die beste Stimme des Geräts.
+const TTS = { on: false, playing: false, q: [], i: 0, nextPage: 0, gen: 0, audio: new Audio(), cache: new Map(), engine: '',
+  rate: pref.get('ttsRate', 1), voice: pref.get('ttsVoice', 'Kore') };
+const TTS_VOICES = [['Kore', 'Kore (weiblich)'], ['Aoede', 'Aoede (weiblich)'], ['Leda', 'Leda (weiblich)'], ['Puck', 'Puck (männlich)'], ['Charon', 'Charon (männlich)'], ['Orus', 'Orus (männlich)']];
+const SILENT = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YQAAAAA=';
+const IC_PLAY = '<svg class="i" viewBox="0 0 24 24"><path d="M7 5l12 7-12 7z"/></svg>', IC_PAUSE = '<svg class="i" viewBox="0 0 24 24"><path d="M8 5v14M16 5v14"/></svg>';
+function bestVoice() {
+  if (!window.speechSynthesis) return null;
+  const vs = speechSynthesis.getVoices().filter(v => /^de/i.test(v.lang));
+  const score = v => (/premium|enhanced|natural|neural|siri|erweitert/i.test(v.name + ' ' + v.voiceURI) ? 10 : 0) + (/google/i.test(v.name) ? 6 : 0) + (/anna|petra|helena|katja|marlene/i.test(v.name) ? 2 : 0) + (v.localService ? 1 : 0);
+  return vs.sort((a, b) => score(b) - score(a))[0] || null;
+}
+if (window.speechSynthesis) { speechSynthesis.getVoices(); speechSynthesis.addEventListener && speechSynthesis.addEventListener('voiceschanged', () => { if (TTS.on) ttsUI(); }); }
+function chunkText(t, first) {
+  const parts = t.match(/[^.!?;:]+[.!?;:]*\s*/g) || [t];
+  const out = [];
+  let cur = '';
+  for (const s of parts) {
+    const max = !out.length && first ? 280 : 1100;
+    if (cur && (cur + s).length > max) { out.push(cur.trim()); cur = ''; }
+    cur += s;
+  }
+  if (cur.trim()) out.push(cur.trim());
+  return out;
+}
+async function ttsFill() {
+  // Seite für Seite in Abschnitte teilen, immer etwas vorausplanen
+  while (TTS.q.length - TTS.i < 3 && TTS.nextPage && TTS.nextPage <= R.pages.length) {
+    const n = TTS.nextPage++;
+    const t = await pageText(n, 20000);
+    chunkText(t, TTS.q.length === 0).forEach(c => TTS.q.push({ n, t: c }));
+  }
+}
+function ttsUI() {
+  $('#ttsbar').hidden = !TTS.on;
+  $('#tts-play').innerHTML = TTS.playing ? IC_PAUSE : IC_PLAY;
+  $('#tts-play').setAttribute('aria-label', TTS.playing ? 'Pause' : 'Weiterlesen');
+  $('#tts-rate').textContent = TTS.rate.toFixed(1).replace('.', ',') + '×';
+  const v = TTS.engine === 'gemini' ? TTS.voice : ((bestVoice() || {}).name || 'Gerätestimme');
+  $('#tts-voice').textContent = v;
+  $('#tts-voice').title = TTS.engine === 'gemini' ? 'Natürliche KI-Stimme (Gemini). Antippen: andere Stimme' : 'Stimme des Geräts';
+}
+function pcmToWav(b64, mime) {
+  const rate = +(((mime || '').match(/rate=(\d+)/) || [])[1] || 24000);
+  const bin = atob(b64), n = bin.length;
+  const buf = new ArrayBuffer(44 + n), v = new DataView(buf);
+  const w = (o, str) => { for (let k = 0; k < str.length; k++) v.setUint8(o + k, str.charCodeAt(k)); };
+  w(0, 'RIFF'); v.setUint32(4, 36 + n, true); w(8, 'WAVE'); w(12, 'fmt '); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+  v.setUint32(24, rate, true); v.setUint32(28, rate * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true); w(36, 'data'); v.setUint32(40, n, true);
+  const u8 = new Uint8Array(buf, 44);
+  for (let k = 0; k < n; k++) u8[k] = bin.charCodeAt(k);
+  return URL.createObjectURL(new Blob([buf], { type: 'audio/wav' }));
+}
+async function geminiSpeak(text) {
+  const key = geminiKey();
+  for (const model of ['gemini-2.5-flash-preview-tts', 'gemini-2.5-flash-tts', 'gemini-2.5-pro-preview-tts']) {
+    let res;
+    try {
+      res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(key)}`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contents: [{ parts: [{ text }] }], generationConfig: { responseModalities: ['AUDIO'], speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: TTS.voice } } } } })
+      });
+    } catch { const e = new Error('offline'); e.status = 0; throw e; }
+    if (res.status === 404) continue;
+    if (!res.ok) { const e = new Error('tts ' + res.status); e.status = res.status; throw e; }
+    const j = await res.json();
+    const part = (((j.candidates || [])[0] || {}).content || { parts: [] }).parts.find(p => p.inlineData);
+    if (!part) { const e = new Error('tts leer'); e.status = 500; throw e; }
+    return pcmToWav(part.inlineData.data, part.inlineData.mimeType);
+  }
+  const e = new Error('tts 404'); e.status = 404; throw e;
+}
+function ttsPrepare(i) {
+  if (!TTS.cache.has(i)) {
+    const it = TTS.q[i];
+    const p = geminiSpeak(it.t);
+    p.catch(() => {});
+    TTS.cache.set(i, p);
+  }
+  return TTS.cache.get(i);
+}
+function ttsClearCache() { for (const p of TTS.cache.values()) p.then(u => URL.revokeObjectURL(u)).catch(() => {}); TTS.cache.clear(); }
+async function ttsPlay(i) {
+  const gen = ++TTS.gen;
+  TTS.i = i; TTS.playing = true; ttsUI();
+  TTS.audio.pause(); if (window.speechSynthesis) speechSynthesis.cancel();
+  await ttsFill();
+  if (gen !== TTS.gen) return;
+  const it = TTS.q[i];
+  if (!it) { ttsStop(); toast('Ende des Skripts erreicht'); return; }
+  if (it.n !== R.cur && R.doc) gotoPage(it.n);
+  const next = () => { if (gen === TTS.gen && TTS.playing) ttsPlay(i + 1); };
+  if (TTS.engine === 'gemini') {
+    try {
+      const url = await ttsPrepare(i);
+      if (gen !== TTS.gen) return;
+      ttsFill().then(() => { if (TTS.q[i + 1]) ttsPrepare(i + 1); });
+      TTS.audio.src = url; TTS.audio.playbackRate = TTS.rate; TTS.audio.preservesPitch = true;
+      TTS.audio.onended = next;
+      await TTS.audio.play();
+      return;
+    } catch (e) {
+      if (gen !== TTS.gen) return;
+      console.warn(e);
+      if (e && e.name === 'NotAllowedError') { TTS.playing = false; ttsUI(); return; }
+      TTS.engine = 'system'; ttsClearCache(); ttsUI();
+      toast(e && e.status === 429 ? 'Das kostenlose Gemini-Limit fürs Vorlesen ist für heute erreicht. Ich lese mit der Gerätestimme weiter.'
+        : 'Die KI-Stimme ist gerade nicht erreichbar. Ich lese mit der Gerätestimme weiter.', 5000);
+    }
+  }
+  if (!window.speechSynthesis) { ttsStop(); toast('Vorlesen wird auf diesem Gerät nicht unterstützt.'); return; }
+  const u = new SpeechSynthesisUtterance(it.t);
+  u.lang = 'de-DE'; u.rate = TTS.rate;
+  const v = bestVoice(); if (v) u.voice = v;
+  u.onend = next;
+  u.onerror = ev => { if (ev.error !== 'interrupted' && ev.error !== 'canceled') next(); };
+  speechSynthesis.speak(u);
+}
+function ttsStart() {
+  if (!R.doc) return;
+  // iOS: Audio im Tipp freischalten, bevor die KI-Stimme geladen ist
+  try { TTS.audio.src = SILENT; TTS.audio.play().catch(() => {}); } catch {}
+  ttsClearCache();
+  TTS.on = true; TTS.q = []; TTS.nextPage = R.cur;
+  TTS.engine = geminiKey() ? 'gemini' : 'system';
+  ttsUI();
+  if (TTS.engine === 'system' && !pref.get('tts-hint', false)) {
+    pref.set('tts-hint', true);
+    toast('Für eine natürlichere Stimme: Gemini-Schlüssel im KI-Fenster eintragen. Am iPhone hilft auch eine „Premium“-Stimme unter Einstellungen › Bedienungshilfen › Gesprochene Inhalte › Stimmen.', 7000);
+  }
+  ttsPlay(0);
+}
+function ttsPause() {
+  TTS.gen++; TTS.playing = false;
+  TTS.audio.pause(); if (window.speechSynthesis) speechSynthesis.cancel();
+  ttsUI();
+}
+function ttsStop() {
+  if (!TTS.on) return;
+  ttsPause(); TTS.on = false; ttsClearCache(); TTS.q = []; ttsUI();
+}
+$('#r-tts').addEventListener('click', () => { if (TTS.on) ttsStop(); else ttsStart(); });
+$('#tts-play').addEventListener('click', () => {
+  if (TTS.playing) return ttsPause();
+  try { TTS.audio.src = SILENT; TTS.audio.play().catch(() => {}); } catch {}
+  ttsPlay(TTS.i);
+});
+$('#tts-prev').addEventListener('click', () => ttsPlay(Math.max(0, TTS.i - 1)));
+$('#tts-next').addEventListener('click', () => ttsPlay(TTS.i + 1));
+$('#tts-stop').addEventListener('click', ttsStop);
+$('#tts-rate').addEventListener('click', () => {
+  const rates = [0.8, 1, 1.2, 1.4, 1.6, 1.8];
+  TTS.rate = rates[(rates.indexOf(TTS.rate) + 1) % rates.length] || 1;
+  pref.set('ttsRate', TTS.rate);
+  TTS.audio.playbackRate = TTS.rate;
+  ttsUI();
+  if (TTS.engine === 'system' && TTS.playing) ttsPlay(TTS.i);
+});
+$('#tts-voice').addEventListener('click', () => {
+  if (TTS.engine !== 'gemini') { toast('Andere Gerätestimmen findest du am iPhone unter Einstellungen › Bedienungshilfen › Gesprochene Inhalte › Stimmen › Deutsch.', 6000); return; }
+  const k = TTS_VOICES.findIndex(v => v[0] === TTS.voice);
+  TTS.voice = TTS_VOICES[(k + 1) % TTS_VOICES.length][0];
+  pref.set('ttsVoice', TTS.voice);
+  toast('Stimme: ' + TTS_VOICES.find(v => v[0] === TTS.voice)[1]);
+  ttsClearCache(); ttsUI();
+  if (TTS.playing) ttsPlay(TTS.i);
+});
+
 })();
 </script>

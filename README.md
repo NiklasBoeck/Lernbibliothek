@@ -2,6 +2,8 @@
 
 Deine Lernskripte (PDF) an einem Ort. In der Bibliothek siehst du jedes Skript mit Titelbild und kannst Haken setzen für „bereit für die Klausur“ und „Klausur geschrieben“. Der Lesemodus hat Hell/Sepia/Dunkel, Volltextsuche, Zoom, Zoom-Sperre, Lesezeichen und Vollbild-Lesen (Menü nach oben wischen).
 
+Zum Lernen gibt es Textmarker in vier Farben mit Notizen, Karteikarten mit Wiederholung in wachsenden Abständen (aus Markierungen oder per KI zur Seite), ein Klausurdatum mit Countdown und Seiten pro Tag, abhakbare Kapitel, ein KI-Quiz pro Kapitel und Vorlesen. Mit Gemini-Schlüssel liest eine natürliche KI-Stimme vor, sonst die beste Stimme des Geräts.
+
 Mit dem Cloud-Sync (Supabase) sind Skripte, Haken, Lesefortschritt und Lesezeichen auf allen Geräten gleich.
 
 ## Wo die App läuft
